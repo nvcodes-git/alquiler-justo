@@ -488,17 +488,16 @@ else:
     if st.session_state.profile == "inquilino":
         selected = option_menu(
             menu_title=None,
-            options=["Analizar un alquiler", "Buscar departamento",
-                     "Mapa de precios", "Cómo funciona"],
-            icons=["clipboard-check", "search-heart", "geo-alt", "info-circle"],
+            options=["Analizar un alquiler", "Buscar departamento", "Mapa de precios"],
+            icons=["clipboard-check", "search-heart", "geo-alt"],
             orientation="horizontal", default_index=0,
             key="menu_inquilino", styles=MENU_STYLES,
         )
     else:
         selected = option_menu(
             menu_title=None,
-            options=["Tasar mi propiedad", "Mapa de precios", "Cómo funciona"],
-            icons=["cash-coin", "geo-alt", "info-circle"],
+            options=["Tasar mi propiedad", "Mapa de precios"],
+            icons=["cash-coin", "geo-alt"],
             orientation="horizontal", default_index=0,
             key="menu_propietario", styles=MENU_STYLES,
         )
@@ -1100,68 +1099,3 @@ elif selected == "Mapa de precios":
         stats_display[["Distrito", "Avisos", "Precio prom. (S/)", "Área prom. (m²)", "Dorm. prom."]],
         use_container_width=True, hide_index=True,
     )
-
-# ===========================================================================
-# Cómo funciona
-# ===========================================================================
-elif selected == "Cómo funciona":
-    model_loaded, res = load_model()
-    st.subheader("Metodología")
-    st.markdown(f"""
-    ### Modelo hedónico log-lineal (OLS)
-
-    Entrenado sobre **{res.n_obs:,} departamentos en alquiler** de Lima Metropolitana
-    (Miraflores, San Isidro, Surco, Magdalena del Mar), extraídos de portales inmobiliarios.
-
-    **Especificación:**
-    ```
-    ln(precio_pen) = β₀ + β₁·ln(m²) + β₂·dormitorios + β₃·baños
-                   + β₄·piso + Σγ_d·distrito_d + Σδ_a·amenidad_a + ε
-    ```
-
-    **Resultados:**
-    | Métrica | Valor |
-    |---|---|
-    | R² | {res.rsquared:.3f} |
-    | R² ajustado | {res.rsquared_adj:.3f} |
-    | RMSE (% del precio) | {res.rmse_pct:.1f}% |
-    | Observaciones | {res.n_obs:,} |
-    | Distritos | {', '.join(res.districts)} |
-
-    **Coeficientes principales:**
-    """)
-
-    coef_df = pd.DataFrame({
-        "Variable": res.params.index,
-        "Coeficiente": res.params.values.round(3),
-        "Interpretación": [
-            "Intercepto (base Magdalena, sin amenidades)",
-            "Elasticidad área: +1% m² → +0.72% precio",
-            "Dormitorios adicionales (efecto sobre precio log)",
-            "Baños adicionales",
-            "Piso",
-            "Prima Miraflores vs Magdalena: +21%",
-            "Prima San Isidro vs Magdalena: +27%",
-            "Prima Surco vs Magdalena: -5%",
-            "Piscina: +6%", "Gimnasio: +9%", "Cochera: +17%",
-            "Ascensor: +10%", "Seguridad", "Terraza: +9%",
-            "Amoblado: +10%", "Aire acond.",
-        ] if len(res.params) == 16 else [""] * len(res.params),
-    })
-    st.dataframe(coef_df, use_container_width=True, hide_index=True)
-
-    st.markdown("""
-    ### Herramientas del curso utilizadas
-    | Herramienta | Lectura | Uso |
-    |---|---|---|
-    | Web scraping (requests + BeautifulSoup) | 2-3 | `scraping/infocasas.py` — extrae 1,196 avisos reales |
-    | GeoPandas + Folium + Streamlit | 3-7 | `frontend/app.py` — mapa coroplético interactivo |
-    | Regresión hedónica OLS (statsmodels) | 8-10 | `backend/app/model.py` — R²=0.776 sobre 912 avisos |
-
-    ### Limitaciones
-    - **Precio de oferta ≠ precio de transacción**: modelamos el mercado de avisos publicados.
-    - **Cobertura**: 4 distritos de Lima Metropolitana de alta densidad de avisos.
-    - **Endogeneidad**: amenidades y distrito están correlacionados (San Isidro tiene más piscinas).
-      El modelo es descriptivo, no causal.
-    - **Distritos con <20 avisos**: se muestran con advertencia de datos insuficientes.
-    """)
