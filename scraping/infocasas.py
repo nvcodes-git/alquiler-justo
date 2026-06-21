@@ -97,6 +97,101 @@ def get_listings_from_page(session: requests.Session, slug: str, page: int) -> t
 
 
 # ---------------------------------------------------------------------------
+# District assignment by real location (address + lat/lon)
+# ---------------------------------------------------------------------------
+
+USD_TO_PEN = 3.75
+
+# Distritos que SÍ cubrimos → slug canónico
+OUR_DISTRICTS = {
+    "miraflores", "san-isidro", "surco", "magdalena", "san-miguel",
+    "barranco", "san-borja", "la-molina", "jesus-maria", "lince", "pueblo-libre",
+}
+
+# Gazetteer de Lima Metropolitana (slug → centroide aprox). Incluye distritos
+# fuera de cobertura para poder RECHAZAR avisos que no son de los nuestros.
+LIMA_GAZETTEER = {
+    # cobertura
+    "miraflores": (-12.1219, -77.0299), "san-isidro": (-12.0969, -77.0367),
+    "surco": (-12.1477, -76.9934), "magdalena": (-12.0925, -77.0714),
+    "san-miguel": (-12.0771, -77.0982), "barranco": (-12.1530, -77.0197),
+    "san-borja": (-12.0990, -76.9952), "la-molina": (-12.0820, -76.9432),
+    "jesus-maria": (-12.0703, -77.0469), "lince": (-12.0833, -77.0361),
+    "pueblo-libre": (-12.0742, -77.0630),
+    # fuera de cobertura (para rechazar correctamente)
+    "surquillo": (-12.1120, -77.0180), "la-victoria": (-12.0680, -77.0160),
+    "lima-cercado": (-12.0500, -77.0400), "breña": (-12.0590, -77.0500),
+    "rimac": (-12.0270, -77.0300), "el-agustino": (-12.0420, -76.9930),
+    "santa-anita": (-12.0430, -76.9700), "ate": (-12.0260, -76.9180),
+    "san-juan-de-lurigancho": (-11.9800, -77.0000), "comas": (-11.9500, -77.0600),
+    "independencia": (-11.9900, -77.0500), "los-olivos": (-11.9700, -77.0700),
+    "san-martin-de-porres": (-12.0000, -77.0800), "carabayllo": (-11.8967, -77.0386),
+    "puente-piedra": (-11.8700, -77.0750), "chorrillos": (-12.1700, -77.0140),
+    "san-juan-de-miraflores": (-12.1600, -76.9700), "villa-el-salvador": (-12.2130, -76.9380),
+    "villa-maria-del-triunfo": (-12.1620, -76.9430), "callao": (-12.0560, -77.1180),
+    "ventanilla": (-11.8745, -77.1300), "bellavista": (-12.0620, -77.1080),
+    "la-perla": (-12.0700, -77.1150), "lurin": (-12.2700, -76.8700),
+    "pachacamac": (-12.2300, -76.8500), "chaclacayo": (-11.9800, -76.7700),
+    "santiago-de-surco": (-12.1477, -76.9934),
+}
+
+# Nombres tal como aparecen en `address` → slug (incluye fuera de cobertura)
+_ADDR_NAME2SLUG = {
+    "miraflores": "miraflores", "san isidro": "san-isidro",
+    "santiago de surco": "surco", "surco": "surco",
+    "magdalena del mar": "magdalena", "magdalena": "magdalena",
+    "san miguel": "san-miguel", "barranco": "barranco", "san borja": "san-borja",
+    "la molina": "la-molina", "jesús maría": "jesus-maria", "jesus maria": "jesus-maria",
+    "lince": "lince", "pueblo libre": "pueblo-libre",
+    "surquillo": "surquillo", "la victoria": "la-victoria", "breña": "breña",
+    "rímac": "rimac", "rimac": "rimac", "el agustino": "el-agustino",
+    "santa anita": "santa-anita", "ate": "ate", "comas": "comas",
+    "independencia": "independencia", "los olivos": "los-olivos",
+    "san martín de porres": "san-martin-de-porres", "san martin de porres": "san-martin-de-porres",
+    "carabayllo": "carabayllo", "puente piedra": "puente-piedra",
+    "chorrillos": "chorrillos", "san juan de lurigancho": "san-juan-de-lurigancho",
+    "san juan de miraflores": "san-juan-de-miraflores",
+    "villa el salvador": "villa-el-salvador", "villa maría del triunfo": "villa-maria-del-triunfo",
+    "callao": "callao", "ventanilla": "ventanilla", "bellavista": "bellavista",
+    "la perla": "la-perla", "lurín": "lurin", "lurin": "lurin",
+    "pachacámac": "pachacamac", "pachacamac": "pachacamac", "chaclacayo": "chaclacayo",
+    "cercado de lima": "lima-cercado", "lima cercado": "lima-cercado",
+}
+
+
+def _district_from_location(address: str, lat, lon) -> Optional[str]:
+    """
+    Determine the real district of a listing. Returns a canonical slug if it
+    is one of OUR_DISTRICTS, or None if the listing is out of coverage / unknown.
+    Primary signal: district name in `address`. Fallback: nearest centroid by lat/lon.
+    """
+    a = (address or "").lower()
+    for name, slug in _ADDR_NAME2SLUG.items():
+        if re.search(r"(^|[,\s])" + re.escape(name) + r"($|[,\s])", a):
+            canon = "surco" if slug == "santiago-de-surco" else slug
+            return canon if canon in OUR_DISTRICTS else None
+
+    try:
+        latf, lonf = float(lat), float(lon)
+    except (TypeError, ValueError):
+        return None
+    if not (-13 < latf < -11 and -78 < lonf < -76):
+        return None  # fuera de Lima / coords inválidas
+
+    best, best_d = None, 1e9
+    for slug, (cla, clo) in LIMA_GAZETTEER.items():
+        d = (cla - latf) ** 2 + (clo - lonf) ** 2
+        if d < best_d:
+            best_d, best = d, slug
+    if best == "santiago-de-surco":
+        best = "surco"
+    # aceptar solo si está razonablemente cerca de algún centroide (~9 km)
+    if best and best_d < 0.08 ** 2:
+        return best if best in OUR_DISTRICTS else None
+    return None
+
+
+# ---------------------------------------------------------------------------
 # Listing normalization
 # ---------------------------------------------------------------------------
 
@@ -114,8 +209,10 @@ def normalize_listing(raw: dict, district_name: str) -> Optional[dict]:
 
     if currency_name == "S/":
         price_pen = price_amount
-    elif currency_name in ("US$", "USD", "$") and price_usd:
-        price_pen = None
+    elif price_usd:
+        price_pen = float(price_usd) * USD_TO_PEN   # convertir USD→PEN
+    elif price_amount and currency_name in ("US$", "USD", "$"):
+        price_pen = float(price_amount) * USD_TO_PEN
     else:
         price_pen = None
 
@@ -149,8 +246,13 @@ def normalize_listing(raw: dict, district_name: str) -> Optional[dict]:
     if raw.get("garage", 0):
         amenities["cochera"] = 1
 
-    # District: use passed-in name (from URL slug) as authoritative source
-    district = district_name
+    # District: derive from the listing's REAL location (address + lat/lon),
+    # not the search slug (Infocasas search returns mixed districts).
+    district = _district_from_location(
+        raw.get("address"), raw.get("latitude"), raw.get("longitude")
+    )
+    if district is None:
+        return None  # out of coverage / unknown → skip
 
     # Raw description (stripped of HTML) for Claude parser
     description_clean = re.sub(r"<[^>]+>", " ", raw.get("description") or "").strip()
