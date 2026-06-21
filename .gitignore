@@ -16,12 +16,13 @@ venv/
 .env.local
 .streamlit/secrets.toml
 
-# Data (samples sí van; datasets grandes no)
+# Data (samples y DB van; datasets grandes no)
 data/raw/
 data/processed/
 data/*.csv
 data/*.parquet
 !data/samples/*.csv
+!data/listings.db
 
 # OS / IDE
 .DS_Store

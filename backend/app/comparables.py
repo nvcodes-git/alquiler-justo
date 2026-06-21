@@ -9,7 +9,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-DB_PATH = Path("data/raw/listings.db")
+DB_PATH = Path("data/listings.db")
 
 
 def get_comparables(

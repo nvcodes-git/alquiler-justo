@@ -22,7 +22,7 @@ import statsmodels.api as sm
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = Path("data/raw/listings.db")
+DB_PATH = Path("data/listings.db")
 MIN_OBS_PER_DISTRICT = 20
 AMENITY_COLS = ["piscina", "gimnasio", "cochera", "ascensor", "seguridad",
                 "terraza", "amoblado", "aire"]

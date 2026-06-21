@@ -72,7 +72,7 @@ def _price_color(avg_pen: float) -> str:
         return "#f1c40f"
     return "#27ae60"
 
-DB_PATH = Path("data/raw/listings.db")
+DB_PATH = Path("data/listings.db")
 
 # ---------------------------------------------------------------------------
 # Cached resources
