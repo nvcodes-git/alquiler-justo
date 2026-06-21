@@ -266,63 +266,52 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-MENU_OPTIONS = ["Inicio", "Analizar mi alquiler", "Tasar mi propiedad",
-                "Asistente", "Mapa de precios", "Cómo funciona"]
-# Routing override coming from landing-page cards (consumed once)
-_manual = st.session_state.pop("manual_select", None)
-selected = option_menu(
-    menu_title=None,
-    options=MENU_OPTIONS,
-    icons=["house-heart", "search-heart", "cash-coin", "chat-dots", "geo-alt", "info-circle"],
-    orientation="horizontal",
-    default_index=0,
-    manual_select=_manual,
-    key="mainmenu",
-    styles={
-        "container": {"padding": "0!important", "background-color": "#f8f9fa",
-                      "border-radius": "12px", "margin-bottom": "0.5rem"},
-        "icon": {"color": "#1f9d57", "font-size": "16px"},
-        "nav-link": {"font-size": "14px", "font-weight": "600", "color": "#444",
-                     "text-align": "center", "margin": "3px",
-                     "--hover-color": "#e8f5ee"},
-        "nav-link-selected": {"background-color": "#1f9d57", "color": "white"},
-    },
-)
-selected = selected or "Inicio"
+# ---------------------------------------------------------------------------
+# Navegación de dos niveles: perfil → herramientas específicas del perfil
+# ---------------------------------------------------------------------------
+if "profile" not in st.session_state:
+    st.session_state.profile = None
 
-# ===========================================================================
-# Inicio — landing con selección de perfil
-# ===========================================================================
-if selected == "Inicio":
-    st.markdown("### ¿Qué necesitas hoy?")
-    st.caption("Elige tu perfil — usamos el mismo motor de datos para responder tu pregunta.")
+MENU_STYLES = {
+    "container": {"padding": "0!important", "background-color": "#f8f9fa",
+                  "border-radius": "12px", "margin-bottom": "0.5rem"},
+    "icon": {"color": "#1f9d57", "font-size": "16px"},
+    "nav-link": {"font-size": "14px", "font-weight": "600", "color": "#444",
+                 "text-align": "center", "margin": "3px", "--hover-color": "#e8f5ee"},
+    "nav-link-selected": {"background-color": "#1f9d57", "color": "white"},
+}
+
+selected = None
+
+if st.session_state.profile is None:
+    # ── Nivel 1: elegir perfil ──
+    st.markdown("### ¿Cómo podemos ayudarte hoy?")
+    st.caption("Elige tu perfil y te llevamos a las herramientas pensadas para ti.")
 
     c_tenant, c_owner = st.columns(2)
     with c_tenant:
         with st.container(border=True):
             st.markdown("#### 🔍 Soy inquilino")
             st.markdown(
-                "Estás por alquilar y quieres saber **si el precio es justo** "
-                "antes de firmar. Pega los datos del aviso y te decimos si está "
-                "bien preciado, justo o sobrevalorado — con evidencia del mercado."
+                "Quiero saber **si un alquiler está bien preciado** antes de firmar, "
+                "o **buscar opciones** que se ajusten a lo que necesito."
             )
             st.markdown("&nbsp;", unsafe_allow_html=True)
-            if st.button("Analizar un alquiler →", key="go_tenant",
+            if st.button("Entrar como inquilino →", key="go_tenant",
                          use_container_width=True, type="primary"):
-                st.session_state.manual_select = 1
+                st.session_state.profile = "inquilino"
                 st.rerun()
     with c_owner:
         with st.container(border=True):
             st.markdown("#### 💰 Soy propietario")
             st.markdown(
-                "Tienes una propiedad y quieres alquilarla al **mejor precio posible** "
-                "sin que se quede meses vacía. Te damos el precio óptimo y 3 estrategias: "
-                "alquilar rápido, equilibrado o maximizar ingreso."
+                "Tengo una propiedad y quiero saber **cuánto pedir** para alquilarla "
+                "al mejor precio posible, sin que se quede meses vacía."
             )
             st.markdown("&nbsp;", unsafe_allow_html=True)
-            if st.button("Tasar mi propiedad →", key="go_owner",
+            if st.button("Entrar como propietario →", key="go_owner",
                          use_container_width=True, type="primary"):
-                st.session_state.manual_select = 2
+                st.session_state.profile = "propietario"
                 st.rerun()
 
     st.markdown("---")
@@ -330,20 +319,52 @@ if selected == "Inicio":
     h1.metric("Avisos analizados", f"{_res_for_header.n_obs:,}")
     h2.metric("Distritos de Lima", f"{len(_res_for_header.districts)}")
     h3.metric("Respuesta en", "< 5 seg")
-
     st.caption(
         "AlquilerJusto compara cada propiedad contra miles de alquileres reales "
         "del mercado limeño usando un modelo de precios entrenado con datos vivos."
     )
+else:
+    # ── Nivel 2: sub-menú según el perfil ──
+    back_col, _sp = st.columns([1, 4])
+    with back_col:
+        if st.button("← Cambiar perfil", key="change_profile", use_container_width=True):
+            st.session_state.profile = None
+            st.rerun()
+
+    if st.session_state.profile == "inquilino":
+        selected = option_menu(
+            menu_title=None,
+            options=["Analizar un alquiler", "Buscar departamento",
+                     "Mapa de precios", "Cómo funciona"],
+            icons=["clipboard-check", "search-heart", "geo-alt", "info-circle"],
+            orientation="horizontal", default_index=0,
+            key="menu_inquilino", styles=MENU_STYLES,
+        )
+    else:
+        selected = option_menu(
+            menu_title=None,
+            options=["Tasar mi propiedad", "Mapa de precios", "Cómo funciona"],
+            icons=["cash-coin", "geo-alt", "info-circle"],
+            orientation="horizontal", default_index=0,
+            key="menu_propietario", styles=MENU_STYLES,
+        )
 
 # ===========================================================================
-# Analizar mi alquiler
+# Analizar un alquiler (inquilino)
 # ===========================================================================
-elif selected == "Analizar mi alquiler":
+if selected == "Analizar un alquiler":
     model, results = load_model()
 
+    # --- Intro: explica las formas de ingresar los datos ---
+    st.markdown("### ¿Algún departamento en mente? Coloca sus datos y te ayudo a analizar el precio")
+    st.markdown(
+        "Tienes **dos formas** de hacerlo: llena el formulario tú mismo, o si no "
+        "recuerdas todos los datos, **pega la descripción del aviso** y los completamos por ti. "
+        "¿No tienes uno a la mano? Prueba con un ejemplo real del mercado 👇"
+    )
+
     # --- Example cards ---
-    st.markdown("#### Ejemplos reales del mercado — elige uno para empezar")
+    st.markdown("##### Ejemplos reales del mercado")
     examples = load_examples()
     if "example_idx" not in st.session_state:
         st.session_state.example_idx = None
@@ -388,8 +409,9 @@ elif selected == "Analizar mi alquiler":
 
     st.markdown("---")
 
-    # --- Claude AI parser ---
-    with st.expander("📋 ¿Tienes la descripción del aviso? Pégala y completamos el formulario"):
+    # --- Atajo: pegar la descripción y autocompletar ---
+    st.markdown("##### ¿No recuerdas todos los datos? Pega la descripción del aviso 👇")
+    with st.expander("📋 Pegar descripción y autocompletar el formulario"):
         st.caption(
             "Pega el texto del aviso (descripción, título, características) "
             "y rellenamos m², dormitorios, precio, amenidades y más por ti."
@@ -434,7 +456,9 @@ elif selected == "Analizar mi alquiler":
                 st.warning("Pega una descripción primero.")
 
     st.markdown("---")
-    st.markdown("#### ✏️ Personaliza los datos del aviso")
+    st.markdown("#### ✏️ Completa los datos del aviso")
+    st.caption("Se autocompletan si elegiste un ejemplo o pegaste una descripción arriba. "
+               "Ajusta lo que necesites y dale a *Analizar precio*.")
 
     amenities_raw = json.loads(parsed_listing.get("amenities_raw") or "{}") if parsed_listing else {}
 
@@ -780,12 +804,12 @@ elif selected == "Tasar mi propiedad":
             st.markdown(cards_html, unsafe_allow_html=True)
 
 # ===========================================================================
-# Asistente conversacional
+# Buscar departamento (inquilino) — asistente conversacional
 # ===========================================================================
-elif selected == "Asistente":
-    st.subheader("💬 ¿Tienes dudas o estás buscando algún departamento en específico?")
+elif selected == "Buscar departamento":
+    st.subheader("🔎 ¿Buscas un departamento? Dime qué necesitas")
     st.caption(
-        "Búscalo aquí. Dime qué buscas en lenguaje natural y te muestro opciones reales del mercado. "
+        "Escríbelo como hablarías normalmente y te muestro opciones reales del mercado. "
         "Ej: «2 dormitorios en Miraflores hasta S/ 3,500» o «depto en Barranco entre 70 y 90 m²»."
     )
 
