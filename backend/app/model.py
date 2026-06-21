@@ -165,6 +165,9 @@ class Prediction:
     verdict: str                # "buen_precio" | "justo" | "sobrevalorado"
     verdict_emoji: str
     n_comparables: int
+    fair_price_low: float = 0.0   # lower bound of 95% confidence interval
+    fair_price_high: float = 0.0  # upper bound of 95% confidence interval
+    contributions: Optional[dict] = None  # additive price breakdown by feature group
 
 
 class OLSModel:
@@ -203,6 +206,42 @@ class OLSModel:
 
         log_pred   = self._ols.predict(X_row)[0]
         fair_price = float(np.exp(log_pred))
+
+        # 95% confidence interval for the conditional mean (in log space → exp)
+        try:
+            pred_obj = self._ols.get_prediction(X_row)
+            sf = pred_obj.summary_frame(alpha=0.05)
+            fair_low  = float(np.exp(sf["mean_ci_lower"].iloc[0]))
+            fair_high = float(np.exp(sf["mean_ci_upper"].iloc[0]))
+        except Exception:
+            fair_low, fair_high = fair_price * 0.9, fair_price * 1.1
+
+        # Additive price decomposition (sequential exp of cumulative log-sum).
+        # District is centered against the average Lima district so the line
+        # reads "+/- vs promedio" instead of "vs reference district".
+        params = self._ols.params
+        dist_cols = [c for c in params.index if c.startswith("dist_")]
+        # Average district effect (reference district = 0, so divide by K districts)
+        avg_dist = float(sum(params[c] for c in dist_cols)) / (len(dist_cols) + 1)
+        active_dist = sum(float(params[c]) * float(X_row[c].iloc[0]) for c in dist_cols)
+
+        def _logsum(cols):
+            return sum(float(params[c]) * float(X_row[c].iloc[0]) for c in cols if c in params.index)
+
+        ordered = [
+            ("Base + tamaño",   _logsum(["const", "log_area"]) + avg_dist),
+            ("Habitaciones",    _logsum(["bedrooms", "bathrooms", "floor"])),
+            ("Distrito",        active_dist - avg_dist),
+            ("Amenidades",      _logsum([c for c in AMENITY_COLS if c in params.index])),
+        ]
+        contributions = {}
+        cum = 0.0
+        prev_price = 0.0
+        for gname, log_contrib in ordered:
+            cum += log_contrib
+            cur_price = float(np.exp(cum))
+            contributions[gname] = round(cur_price - prev_price, 0)
+            prev_price = cur_price
 
         # Percentile vs comparables in same district with similar area (±25%) and bedrooms
         comps = self._df[
@@ -243,6 +282,9 @@ class OLSModel:
             verdict=verdict,
             verdict_emoji=emoji,
             n_comparables=n_comps,
+            fair_price_low=round(fair_low, 0),
+            fair_price_high=round(fair_high, 0),
+            contributions=contributions,
         )
 
 

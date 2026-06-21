@@ -13,6 +13,7 @@ from pathlib import Path
 
 import folium
 import pandas as pd
+import plotly.graph_objects as go
 import streamlit as st
 from streamlit_folium import st_folium
 
@@ -36,6 +37,38 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
+/* Hero header */
+.hero {
+    background: linear-gradient(120deg, #0f4c2e 0%, #1f9d57 55%, #2ecc71 100%);
+    border-radius: 16px;
+    padding: 2rem 2.4rem;
+    margin-bottom: 1.4rem;
+    color: white;
+    box-shadow: 0 6px 24px rgba(31,157,87,0.25);
+}
+.hero h1 {
+    color: white !important;
+    font-size: 2.5rem;
+    margin: 0 0 0.4rem 0;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+.hero p {
+    color: rgba(255,255,255,0.92);
+    font-size: 1.05rem;
+    margin: 0;
+    max-width: 640px;
+}
+.hero .pill {
+    display: inline-block;
+    background: rgba(255,255,255,0.18);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 20px;
+    padding: 0.2rem 0.9rem;
+    font-size: 0.8rem;
+    margin-top: 0.9rem;
+    font-weight: 600;
+}
 /* Verdict box */
 .verdict-box {
     padding: 1.5rem 2rem;
@@ -169,13 +202,67 @@ def district_stats() -> pd.DataFrame:
 
 
 # ---------------------------------------------------------------------------
+# Chart builders
+# ---------------------------------------------------------------------------
+def build_gauge(deviation_pct: float, verdict: str) -> go.Figure:
+    """Speedometer showing how far the listed price deviates from fair price."""
+    color = {"buen_precio": "#28a745", "justo": "#f1c40f", "sobrevalorado": "#dc3545"}[verdict]
+    val = max(-40, min(40, deviation_pct))
+    fig = go.Figure(go.Indicator(
+        mode="gauge+number",
+        value=val,
+        number={"suffix": "%", "font": {"size": 34, "color": color}},
+        gauge={
+            "axis": {"range": [-40, 40], "tickwidth": 1, "tickvals": [-40, -20, -10, 0, 10, 20, 40]},
+            "bar": {"color": color, "thickness": 0.28},
+            "borderwidth": 0,
+            "steps": [
+                {"range": [-40, -10], "color": "#d4edda"},
+                {"range": [-10, 10],  "color": "#fff3cd"},
+                {"range": [10, 40],   "color": "#f8d7da"},
+            ],
+            "threshold": {"line": {"color": "#222", "width": 3}, "thickness": 0.8, "value": val},
+        },
+    ))
+    fig.update_layout(height=240, margin=dict(l=20, r=20, t=10, b=10),
+                      paper_bgcolor="rgba(0,0,0,0)")
+    return fig
+
+
+def build_histogram(comp_prices, listed_price, fair_price) -> go.Figure:
+    """Distribution of comparable listing prices with markers for this listing & fair price."""
+    fig = go.Figure()
+    fig.add_trace(go.Histogram(
+        x=comp_prices, nbinsx=24, marker_color="#bdc3c7",
+        opacity=0.85, name="Avisos comparables",
+    ))
+    fig.add_vline(x=fair_price, line_width=3, line_dash="dash", line_color="#1f9d57",
+                  annotation_text="Precio justo", annotation_position="top",
+                  annotation_font_color="#1f9d57")
+    fig.add_vline(x=listed_price, line_width=3, line_color="#dc3545",
+                  annotation_text="Este aviso", annotation_position="top left",
+                  annotation_font_color="#dc3545")
+    fig.update_layout(
+        height=300, margin=dict(l=20, r=20, t=40, b=30),
+        xaxis_title="Precio (S/mes)", yaxis_title="N° de avisos",
+        showlegend=False, paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+        bargap=0.05,
+    )
+    return fig
+
+
+# ---------------------------------------------------------------------------
 # Header
 # ---------------------------------------------------------------------------
-st.title("🏠 AlquilerJusto")
-st.markdown(
-    "**¿Tu próximo alquiler en Lima está mal preciado?** "
-    "Compáralo contra el mercado real en menos de 5 segundos."
-)
+_model_for_header, _res_for_header = load_model()
+st.markdown(f"""
+<div class="hero">
+    <h1>🏠 AlquilerJusto</h1>
+    <p><strong>¿Tu próximo alquiler en Lima está mal preciado?</strong>
+    Compáralo contra el mercado real en menos de 5 segundos.</p>
+    <span class="pill">📊 {_res_for_header.n_obs:,} avisos reales · {len(_res_for_header.districts)} distritos · R² = {_res_for_header.rsquared:.2f}</span>
+</div>
+""", unsafe_allow_html=True)
 
 tab1, tab2, tab3 = st.tabs(["🔍 Analizar aviso", "🗺️ Mapa de precios", "📊 Sobre el modelo"])
 
@@ -360,11 +447,30 @@ with tab1:
             <div class="big-number">{pred.verdict_emoji} {label_map[pred.verdict]}</div>
             <div class="subtitle">
                 Precio justo estimado: <strong>S/ {pred.fair_price_pen:,.0f}/mes</strong>
+                <span style="opacity:0.8">(rango S/ {pred.fair_price_low:,.0f} – S/ {pred.fair_price_high:,.0f})</span>
                 &nbsp;|&nbsp; Desvío: <strong>{pred.deviation_pct:+.1f}%</strong>
                 &nbsp;|&nbsp; Percentil: <strong>{pred.percentile:.0f}° de avisos similares</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
+
+        # Gauge + histogram side by side
+        g_col, h_col = st.columns([1, 1.4])
+        with g_col:
+            st.caption("**Desvío vs precio justo**")
+            st.plotly_chart(build_gauge(pred.deviation_pct, pred.verdict),
+                            use_container_width=True, config={"displayModeBar": False})
+        with h_col:
+            st.caption("**¿Dónde cae tu aviso en el mercado?**")
+            comp_prices_df = get_comparables(district, float(area), int(bedrooms),
+                                             float(listed_price), DB_PATH, n=200)
+            if not comp_prices_df.empty and len(comp_prices_df) >= 5:
+                st.plotly_chart(
+                    build_histogram(comp_prices_df["price_pen"].tolist(),
+                                    float(listed_price), pred.fair_price_pen),
+                    use_container_width=True, config={"displayModeBar": False})
+            else:
+                st.info("Pocos comparables para graficar la distribución.")
 
         # Metrics row
         m1, m2, m3, m4 = st.columns(4)
@@ -373,6 +479,34 @@ with tab1:
                   delta=f"{pred.deviation_pct:+.1f}%", delta_color="inverse")
         m3.metric("Percentil",        f"{pred.percentile:.0f}°")
         m4.metric("Comparables",      f"{pred.n_comparables} avisos")
+
+        # Price decomposition — "¿Por qué este precio?"
+        if pred.contributions:
+            st.subheader("🧩 ¿Por qué este precio justo?")
+            st.caption(
+                "Cómo el modelo construye el precio justo a partir de cada característica "
+                "(el distrito se mide vs el promedio de Lima)."
+            )
+            contrib_fig = go.Figure(go.Waterfall(
+                orientation="v",
+                measure=["relative"] * len(pred.contributions) + ["total"],
+                x=list(pred.contributions.keys()) + ["Precio justo"],
+                y=list(pred.contributions.values()) + [0],
+                text=[f"S/ {v:+,.0f}" for v in pred.contributions.values()]
+                     + [f"S/ {pred.fair_price_pen:,.0f}"],
+                textposition="outside",
+                connector={"line": {"color": "#bbb"}},
+                increasing={"marker": {"color": "#2ecc71"}},
+                decreasing={"marker": {"color": "#e67e22"}},
+                totals={"marker": {"color": "#1f9d57"}},
+            ))
+            contrib_fig.update_layout(
+                height=340, margin=dict(l=20, r=20, t=20, b=30),
+                paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+                yaxis_title="Aporte al precio (S/)", showlegend=False,
+            )
+            st.plotly_chart(contrib_fig, use_container_width=True,
+                            config={"displayModeBar": False})
 
         # Comparable cards
         st.subheader("📋 Avisos comparables en el mercado")
