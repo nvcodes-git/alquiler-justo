@@ -39,87 +39,186 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
-/* Hero header */
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800&family=Inter:wght@400;500;600&display=swap');
+
+:root {
+    --aj-green-900: #0b3d2c;
+    --aj-green-700: #13794f;
+    --aj-green-500: #1f9d57;
+    --aj-emerald:   #2ecc71;
+    --aj-amber:     #f5a623;
+    --aj-ink:       #18241f;
+    --aj-muted:     #6b7c74;
+    --aj-cream:     #f5f8f4;
+    --aj-card-sh:   0 4px 18px rgba(11,61,44,0.08);
+    --aj-card-sh-h: 0 12px 30px rgba(11,61,44,0.16);
+}
+
+/* Tipografía global */
+html, body, [class*="css"], .stMarkdown, p, span, div, label, input, textarea {
+    font-family: 'Inter', system-ui, sans-serif;
+}
+h1, h2, h3, h4, h5 {
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    letter-spacing: -0.4px;
+    color: var(--aj-ink);
+}
+
+/* Fondo de la app */
+[data-testid="stAppViewContainer"] {
+    background:
+        radial-gradient(900px 400px at 100% -5%, rgba(46,204,113,0.07), transparent 60%),
+        radial-gradient(700px 350px at -5% 10%, rgba(245,166,35,0.06), transparent 55%),
+        var(--aj-cream);
+}
+
+/* ───────── Hero ───────── */
 .hero {
-    background: linear-gradient(120deg, #0f4c2e 0%, #1f9d57 55%, #2ecc71 100%);
-    border-radius: 16px;
-    padding: 2rem 2.4rem;
-    margin-bottom: 1.4rem;
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(125deg, #0b3d2c 0%, #13794f 48%, #2ecc71 115%);
+    border-radius: 22px;
+    padding: 2.4rem 2.6rem 3.2rem 2.6rem;
+    margin-bottom: 1.5rem;
     color: white;
-    box-shadow: 0 6px 24px rgba(31,157,87,0.25);
+    box-shadow: 0 18px 44px rgba(11,61,44,0.30);
+}
+.hero::after {  /* brillo superior */
+    content: "";
+    position: absolute; top: -40%; right: -10%;
+    width: 460px; height: 460px;
+    background: radial-gradient(circle, rgba(255,255,255,0.18), transparent 65%);
+    pointer-events: none;
+}
+.hero .skyline {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    width: 100%; height: 70px; opacity: 0.55;
+    pointer-events: none;
 }
 .hero h1 {
-    color: white !important;
-    font-size: 2.5rem;
-    margin: 0 0 0.4rem 0;
+    color: #fff !important;
+    font-size: 2.7rem;
+    margin: 0 0 0.5rem 0;
     font-weight: 800;
-    letter-spacing: -0.5px;
+    position: relative; z-index: 1;
 }
 .hero p {
-    color: rgba(255,255,255,0.92);
-    font-size: 1.05rem;
-    margin: 0;
-    max-width: 640px;
+    color: rgba(255,255,255,0.94);
+    font-size: 1.08rem; margin: 0; max-width: 640px;
+    position: relative; z-index: 1;
 }
 .hero .pill {
-    display: inline-block;
-    background: rgba(255,255,255,0.18);
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 20px;
-    padding: 0.2rem 0.9rem;
-    font-size: 0.8rem;
-    margin-top: 0.9rem;
-    font-weight: 600;
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: rgba(255,255,255,0.16);
+    border: 1px solid rgba(255,255,255,0.32);
+    backdrop-filter: blur(6px);
+    border-radius: 30px;
+    padding: 0.35rem 1rem;
+    font-size: 0.82rem; font-weight: 600;
+    margin-top: 1rem; position: relative; z-index: 1;
 }
-/* Verdict box */
-.verdict-box {
-    padding: 1.5rem 2rem;
-    border-radius: 12px;
-    text-align: center;
-    margin: 1rem 0;
-}
-.verde    { background: #d4edda; border: 2px solid #28a745; }
-.amarillo { background: #fff3cd; border: 2px solid #ffc107; }
-.rojo     { background: #f8d7da; border: 2px solid #dc3545; }
-.big-number { font-size: 2.4rem; font-weight: 700; }
-.subtitle   { font-size: 0.9rem; color: #555; margin-top: 0.3rem; }
 
-/* Comparable cards */
+/* ───────── Botones ───────── */
+.stButton > button {
+    border-radius: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(11,61,44,0.12);
+    transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+}
+.stButton > button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(11,61,44,0.16);
+}
+.stButton > button[kind="primary"] {
+    background: linear-gradient(120deg, var(--aj-green-700), var(--aj-emerald));
+    border: none; color: #fff;
+    box-shadow: 0 6px 16px rgba(31,157,87,0.30);
+}
+.stButton > button[kind="primary"]:hover {
+    box-shadow: 0 12px 26px rgba(31,157,87,0.42);
+}
+
+/* ───────── Contenedores con borde (cards nativas) ───────── */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    border-radius: 16px !important;
+    border: 1px solid rgba(11,61,44,0.08) !important;
+    background: #fff;
+    box-shadow: var(--aj-card-sh);
+    transition: transform .18s ease, box-shadow .18s ease;
+}
+[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--aj-card-sh-h);
+}
+
+/* ───────── Métricas ───────── */
+[data-testid="stMetric"] {
+    background: #fff;
+    border: 1px solid rgba(11,61,44,0.08);
+    border-radius: 14px;
+    padding: 0.9rem 1.1rem;
+    box-shadow: var(--aj-card-sh);
+}
+[data-testid="stMetricValue"] { color: var(--aj-green-700); font-weight: 800; }
+
+/* ───────── Inputs ───────── */
+[data-testid="stTextInput"] input, [data-testid="stNumberInput"] input,
+[data-baseweb="select"] > div, .stTextArea textarea {
+    border-radius: 10px !important;
+}
+
+/* ───────── Veredicto ───────── */
+.verdict-box {
+    padding: 1.7rem 2rem;
+    border-radius: 18px;
+    text-align: center;
+    margin: 1.1rem 0;
+    box-shadow: var(--aj-card-sh);
+    animation: aj-pop .4s cubic-bezier(.2,.8,.2,1);
+}
+@keyframes aj-pop { from {opacity:0; transform: scale(.96) translateY(8px);} to {opacity:1; transform:none;} }
+.verde    { background: linear-gradient(135deg,#eafaf0,#d3f3df); border: 1.5px solid #28a745; }
+.amarillo { background: linear-gradient(135deg,#fff8e6,#ffefc2); border: 1.5px solid #f0b400; }
+.rojo     { background: linear-gradient(135deg,#fdecee,#f9d6da); border: 1.5px solid #dc3545; }
+.big-number { font-size: 2.6rem; font-weight: 800; font-family:'Plus Jakarta Sans',sans-serif; }
+.subtitle   { font-size: 0.92rem; color: #4a5a53; margin-top: 0.4rem; }
+
+/* ───────── Cards de avisos ───────── */
 .comp-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
-    gap: 1rem;
-    margin: 1rem 0;
+    gap: 1rem; margin: 1rem 0;
 }
 .comp-card {
-    background: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 10px;
-    padding: 1rem 1.1rem;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
+    position: relative;
+    background: #fff;
+    border: 1px solid rgba(11,61,44,0.08);
+    border-radius: 14px;
+    padding: 1.1rem 1.15rem 1.1rem 1.25rem;
+    display: flex; flex-direction: column; gap: 0.28rem;
+    box-shadow: var(--aj-card-sh);
+    transition: transform .18s ease, box-shadow .18s ease;
+    overflow: hidden;
 }
-.comp-price  { font-size: 1.15rem; font-weight: 700; color: #2c3e50; }
-.comp-meta   { font-size: 0.82rem; color: #666; }
-.comp-diff-down { font-size: 0.82rem; color: #28a745; font-weight: 600; }
-.comp-diff-up   { font-size: 0.82rem; color: #dc3545; font-weight: 600; }
-.comp-link {
-    margin-top: auto;
-    padding-top: 0.6rem;
+.comp-card::before {  /* barra de acento lateral */
+    content:""; position:absolute; left:0; top:0; bottom:0; width:5px;
+    background: linear-gradient(var(--aj-green-500), var(--aj-emerald));
 }
+.comp-card:hover { transform: translateY(-4px); box-shadow: var(--aj-card-sh-h); }
+.comp-price  { font-size: 1.22rem; font-weight: 800; color: var(--aj-ink);
+               font-family:'Plus Jakarta Sans',sans-serif; }
+.comp-meta   { font-size: 0.82rem; color: var(--aj-muted); }
+.comp-diff-down { font-size: 0.82rem; color: #1e9e54; font-weight: 700; }
+.comp-diff-up   { font-size: 0.82rem; color: #dc3545; font-weight: 700; }
+.comp-link { margin-top: auto; padding-top: 0.7rem; }
 .comp-link a {
-    display: block;
-    padding: 0.4rem 0;
-    background: #2ecc71;
-    color: white !important;
-    text-align: center;
-    border-radius: 6px;
-    text-decoration: none !important;
-    font-size: 0.83rem;
-    font-weight: 600;
+    display: block; padding: 0.5rem 0;
+    background: linear-gradient(120deg, var(--aj-green-700), var(--aj-emerald));
+    color: #fff !important; text-align: center; border-radius: 9px;
+    text-decoration: none !important; font-size: 0.84rem; font-weight: 700;
+    transition: filter .15s ease, transform .15s ease;
 }
-.comp-link a:hover { background: #27ae60; }
+.comp-link a:hover { filter: brightness(1.08); transform: translateY(-1px); }
 </style>
 """, unsafe_allow_html=True)
 
@@ -263,6 +362,22 @@ st.markdown(f"""
     <p><strong>¿Tu próximo alquiler en Lima está mal preciado?</strong>
     Descúbrelo en 5 segundos, antes de firmar el contrato.</p>
     <span class="pill">✓ {_res_for_header.n_obs:,} alquileres reales analizados en {len(_res_for_header.districts)} distritos de Lima</span>
+    <svg class="skyline" viewBox="0 0 1200 70" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+        <g fill="#ffffff">
+            <rect x="20"  y="34" width="42" height="36"/><rect x="70"  y="20" width="34" height="50"/>
+            <rect x="112" y="42" width="48" height="28"/><rect x="168" y="14" width="30" height="56"/>
+            <rect x="206" y="38" width="44" height="32"/><rect x="258" y="26" width="36" height="44"/>
+            <rect x="302" y="46" width="50" height="24"/><rect x="360" y="18" width="32" height="52"/>
+            <rect x="400" y="40" width="46" height="30"/><rect x="454" y="28" width="34" height="42"/>
+            <rect x="496" y="10" width="28" height="60"/><rect x="532" y="44" width="48" height="26"/>
+            <rect x="588" y="32" width="38" height="38"/><rect x="634" y="22" width="34" height="48"/>
+            <rect x="676" y="46" width="50" height="24"/><rect x="734" y="16" width="30" height="54"/>
+            <rect x="772" y="40" width="46" height="30"/><rect x="826" y="30" width="36" height="40"/>
+            <rect x="870" y="48" width="48" height="22"/><rect x="926" y="20" width="32" height="50"/>
+            <rect x="966" y="38" width="44" height="32"/><rect x="1018" y="26" width="36" height="44"/>
+            <rect x="1062" y="44" width="50" height="26"/><rect x="1120" y="18" width="30" height="52"/>
+        </g>
+    </svg>
 </div>
 """, unsafe_allow_html=True)
 
