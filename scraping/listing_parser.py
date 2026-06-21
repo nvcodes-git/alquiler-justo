@@ -18,13 +18,26 @@ from scraping.infocasas import normalize_listing, AMENITY_KEYWORDS, BASE_URL
 logger = logging.getLogger(__name__)
 
 KNOWN_DISTRICTS = {
-    "miraflores": "miraflores",
-    "san isidro": "san-isidro",
-    "san-isidro": "san-isidro",
-    "surco": "surco",
-    "santiago de surco": "surco",
-    "magdalena": "magdalena",
-    "magdalena del mar": "magdalena",
+    "miraflores":       "miraflores",
+    "san isidro":       "san-isidro",
+    "san-isidro":       "san-isidro",
+    "surco":            "surco",
+    "santiago de surco":"surco",
+    "magdalena":        "magdalena",
+    "magdalena del mar":"magdalena",
+    "san miguel":       "san-miguel",
+    "san-miguel":       "san-miguel",
+    "barranco":         "barranco",
+    "san borja":        "san-borja",
+    "san-borja":        "san-borja",
+    "la molina":        "la-molina",
+    "la-molina":        "la-molina",
+    "jesus maria":      "jesus-maria",
+    "jesús maría":      "jesus-maria",
+    "jesus-maria":      "jesus-maria",
+    "lince":            "lince",
+    "pueblo libre":     "pueblo-libre",
+    "pueblo-libre":     "pueblo-libre",
 }
 
 

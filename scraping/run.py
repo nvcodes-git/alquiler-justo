@@ -40,12 +40,18 @@ def print_summary(db_path: str) -> None:
 
 
 if __name__ == "__main__":
+    from scraping.infocasas import DISTRITOS
     parser = argparse.ArgumentParser(description="Scrape Lima rental listings")
-    parser.add_argument("--max", type=int, default=200, help="Max listings per district (default 200)")
+    parser.add_argument("--max", type=int, default=200, help="Max listings per district")
     parser.add_argument("--db", type=str, default="data/raw/listings.db", help="SQLite DB path")
+    parser.add_argument(
+        "--districts", nargs="+", default=None,
+        help="Subset of districts to scrape (default: all). E.g. --districts miraflores surco",
+    )
     args = parser.parse_args()
 
-    print(f"Starting scraper → {args.db}  (max {args.max}/district × 4 districts)")
-    total = run_scraper(db_path=args.db, max_per_distrito=args.max)
+    districts = args.districts or list(DISTRITOS.keys())
+    print(f"Starting scraper → {args.db}  (max {args.max}/district × {len(districts)} districts)")
+    total = run_scraper(db_path=args.db, max_per_distrito=args.max, districts=districts)
     print(f"\nDone. {total} new listings inserted.")
     print_summary(args.db)

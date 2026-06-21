@@ -25,10 +25,17 @@ BASE_URL = "https://www.infocasas.com.pe"
 
 # Internal name → Infocasas URL slug
 DISTRITOS: dict[str, str] = {
-    "miraflores": "lima-miraflores",
-    "san-isidro": "lima-san-isidro",
-    "surco":      "lima-surco",
-    "magdalena":  "lima-magdalena-del-mar",
+    "miraflores":  "lima-miraflores",
+    "san-isidro":  "lima-san-isidro",
+    "surco":       "lima-surco",
+    "magdalena":   "lima-magdalena-del-mar",
+    "san-miguel":  "lima-san-miguel",
+    "barranco":    "lima-barranco",
+    "san-borja":   "lima-san-borja",
+    "la-molina":   "lima-la-molina",
+    "jesus-maria": "lima-jesus-maria",
+    "lince":       "lima-lince",
+    "pueblo-libre":"lima-pueblo-libre",
 }
 
 SEARCH_PATH = "/alquiler/departamentos/{slug}?page={page}"
@@ -179,13 +186,15 @@ def run_scraper(
     db_path: str = "data/raw/listings.db",
     max_per_distrito: int = 200,
     max_pages: int = 30,
+    districts: list[str] | None = None,
 ) -> int:
-    """Scrape all target districts. Returns total new listings saved."""
+    """Scrape target districts. Returns total new listings saved."""
     conn = init_db(db_path)
     session = get_session()
     total_new = 0
 
-    for nombre, slug in DISTRITOS.items():
+    target = {k: v for k, v in DISTRITOS.items() if districts is None or k in districts}
+    for nombre, slug in target.items():
         logger.info(f"── {nombre} ({slug}) ──")
         distrito_new = 0
 

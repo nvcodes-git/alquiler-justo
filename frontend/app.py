@@ -204,15 +204,70 @@ with tab1:
                     st.rerun()
 
     # Show which example is loaded
+    if "claude_parsed" not in st.session_state:
+        st.session_state.claude_parsed = None
+
     parsed_listing = (
         examples[st.session_state.example_idx]
         if st.session_state.example_idx is not None else None
     )
+    # Claude-parsed listing overrides example
+    if st.session_state.claude_parsed:
+        parsed_listing = st.session_state.claude_parsed
+
     if parsed_listing:
+        source = "Claude AI" if st.session_state.claude_parsed else "base de datos"
         st.success(
-            f"✅ Cargado: **{parsed_listing.get('title', 'aviso real')}** — "
-            f"puedes modificar cualquier campo abajo antes de analizar."
+            f"✅ Datos cargados ({source}) — "
+            "puedes modificar cualquier campo abajo antes de analizar."
         )
+
+    st.markdown("---")
+
+    # --- Claude AI parser ---
+    with st.expander("🤖 O pega la descripción del aviso — Claude la parsea automáticamente"):
+        st.caption(
+            "Pega el texto del aviso (descripción, título, características) "
+            "y Claude extraerá m², dormitorios, precio, amenidades y más."
+        )
+        desc_input = st.text_area(
+            "Descripción del aviso",
+            placeholder="Ej: Depto 2 dorm, 75m2, piso 4, Miraflores. Cochera incluida, ascensor. S/ 2,800/mes.",
+            height=120,
+            key="claude_desc_input",
+        )
+        if st.button("🤖 Parsear con Claude", key="parse_claude"):
+            if desc_input.strip():
+                try:
+                    import os
+                    from ai.parse_listing import parse_listing_text, claude_to_model_features
+                    api_key = os.getenv("ANTHROPIC_API_KEY")
+                    if not api_key:
+                        st.error("ANTHROPIC_API_KEY no configurado. Configúralo en los secrets de Streamlit.")
+                    else:
+                        with st.spinner("Claude analizando el aviso…"):
+                            raw = parse_listing_text(desc_input.strip())
+                        if raw:
+                            features = claude_to_model_features(raw)
+                            am = features.get("amenities", {})
+                            st.session_state.claude_parsed = {
+                                "price_pen":    features.get("price_pen") or 2500,
+                                "area_m2":      features.get("area_m2") or 70,
+                                "bedrooms":     features.get("bedrooms") or 2,
+                                "bathrooms":    features.get("bathrooms") or 1,
+                                "floor":        features.get("floor") or 1,
+                                "district":     features.get("district") or "miraflores",
+                                "amenities_raw": json.dumps({k: int(v) for k, v in am.items()}),
+                                "title":        "Aviso parseado por Claude",
+                            }
+                            st.session_state.example_idx = None
+                            st.rerun()
+                        else:
+                            st.warning("No se pudo extraer información suficiente. Intenta con una descripción más detallada.")
+                except ImportError:
+                    st.error("Módulo ai.parse_listing no disponible.")
+            else:
+                st.warning("Pega una descripción primero.")
 
     st.markdown("---")
     st.markdown("#### ✏️ Personaliza los datos del aviso")
