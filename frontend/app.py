@@ -669,12 +669,14 @@ if selected == "Analizar un alquiler":
             am_amoblado = st.checkbox("Amoblado",  value=bool(amenities_raw.get("amoblado")))
             am_aire     = st.checkbox("Aire acond.", value=bool(amenities_raw.get("aire")))
             am_seg      = st.checkbox("Seguridad", value=bool(amenities_raw.get("seguridad")))
+            am_mar      = st.checkbox("Vista al mar", value=bool(amenities_raw.get("vista_mar")))
 
     amenities = {
         "piscina": int(am_piscina), "gimnasio": int(am_gym),
         "cochera": int(am_cochera), "ascensor": int(am_ascensor),
         "terraza": int(am_terraza), "amoblado": int(am_amoblado),
         "aire":    int(am_aire),    "seguridad": int(am_seg),
+        "vista_mar": int(am_mar),
     }
 
     if st.button("🔍 Analizar precio", type="primary", use_container_width=True):
@@ -845,12 +847,14 @@ elif selected == "Tasar mi propiedad":
             o_amoblado = st.checkbox("Amoblado", key="o_amob")
             o_aire     = st.checkbox("Aire acond.", key="o_aire")
             o_seg      = st.checkbox("Seguridad", key="o_seg")
+            o_mar      = st.checkbox("Vista al mar", key="o_mar")
 
     o_amenities = {
         "piscina": int(o_piscina), "gimnasio": int(o_gym),
         "cochera": int(o_cochera), "ascensor": int(o_ascensor),
         "terraza": int(o_terraza), "amoblado": int(o_amoblado),
         "aire":    int(o_aire),    "seguridad": int(o_seg),
+        "vista_mar": int(o_mar),
     }
 
     if st.button("💰 Calcular precio óptimo", type="primary", use_container_width=True):

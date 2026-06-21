@@ -24,8 +24,18 @@ logger = logging.getLogger(__name__)
 
 DB_PATH = Path("data/listings.db")
 MIN_OBS_PER_DISTRICT = 20
-AMENITY_COLS = ["piscina", "gimnasio", "cochera", "ascensor", "seguridad",
-                "terraza", "amoblado", "aire"]
+# Amenidades desde amenities_raw (JSON) + derivadas del texto de la descripción
+JSON_AMENITY_COLS = ["piscina", "gimnasio", "cochera", "ascensor", "seguridad",
+                     "terraza", "amoblado", "aire"]
+TEXT_AMENITY_COLS = ["vista_mar"]
+AMENITY_COLS = JSON_AMENITY_COLS + TEXT_AMENITY_COLS
+
+# Patrones para amenidades derivadas del texto libre.
+# Nota: se probó "parque" (cercanía a parque) pero no resultó significativo
+# (p≈0.83), probablemente por colinealidad con el distrito, así que se descartó.
+_TEXT_AMENITY_PATTERNS = {
+    "vista_mar": r"vista al mar|frente al mar|malec[oó]n|al mar\b|ocean",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -36,7 +46,7 @@ def load_data(db_path: Path = DB_PATH) -> pd.DataFrame:
     conn = sqlite3.connect(db_path)
     df = pd.read_sql_query("""
         SELECT district, price_pen, area_m2, bedrooms, bathrooms,
-               floor, antiquity_years, amenities_raw
+               floor, antiquity_years, amenities_raw, description
         FROM listings
         WHERE price_pen IS NOT NULL
           AND price_pen > 300
@@ -55,10 +65,15 @@ def load_data(db_path: Path = DB_PATH) -> pd.DataFrame:
             return {}
 
     amenities = df["amenities_raw"].apply(parse_amenities).apply(pd.Series)
-    for col in AMENITY_COLS:
+    for col in JSON_AMENITY_COLS:
         df[col] = amenities.get(col, 0).fillna(0).astype(int)
 
-    df = df.drop(columns=["amenities_raw"])
+    # Amenidades derivadas del texto libre de la descripción
+    desc_lower = df["description"].fillna("").str.lower()
+    for col, pattern in _TEXT_AMENITY_PATTERNS.items():
+        df[col] = desc_lower.str.contains(pattern, regex=True).astype(int)
+
+    df = df.drop(columns=["amenities_raw", "description"])
     df["floor"] = df["floor"].fillna(0).clip(0, 30)
     df["bathrooms"] = df["bathrooms"].fillna(1).clip(1, 6)
 

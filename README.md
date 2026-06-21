@@ -60,7 +60,8 @@ Infocasas.pe ──scraping──► SQLite (1,475 avisos)
 
 **Lecturas del modelo** (log-lineal, errores robustos HC1):
 - `log(m²)` → +0.72 (elasticidad precio-área: doblar el área ≈ +65% precio)
-- Amenidades: ascensor ≈ +8%, amoblado ≈ +8%, cochera ≈ +5%
+- Amenidades: **vista al mar ≈ +10%**, ascensor ≈ +8%, amoblado ≈ +8%, cochera ≈ +5%
+  - (se probó cercanía a parques, pero no resultó significativa — colinealidad con distrito)
 - Distritos más caros (mediana): San Isidro S/4,800, Miraflores S/3,563, San Borja S/3,224
 - Más accesibles: San Miguel S/1,900, Pueblo Libre S/2,200
 
