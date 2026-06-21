@@ -16,6 +16,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
 from streamlit_folium import st_folium
+from streamlit_option_menu import option_menu
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -259,17 +260,33 @@ st.markdown(f"""
 <div class="hero">
     <h1>🏠 AlquilerJusto</h1>
     <p><strong>¿Tu próximo alquiler en Lima está mal preciado?</strong>
-    Compáralo contra el mercado real en menos de 5 segundos.</p>
-    <span class="pill">📊 {_res_for_header.n_obs:,} avisos reales · {len(_res_for_header.districts)} distritos · R² = {_res_for_header.rsquared:.2f}</span>
+    Descúbrelo en 5 segundos, antes de firmar el contrato.</p>
+    <span class="pill">✓ {_res_for_header.n_obs:,} alquileres reales analizados en {len(_res_for_header.districts)} distritos de Lima</span>
 </div>
 """, unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["🔍 Analizar aviso", "🗺️ Mapa de precios", "📊 Sobre el modelo"])
+selected = option_menu(
+    menu_title=None,
+    options=["Analizar mi alquiler", "Mapa de precios", "Cómo funciona"],
+    icons=["search-heart", "geo-alt", "info-circle"],
+    orientation="horizontal",
+    default_index=0,
+    styles={
+        "container": {"padding": "0!important", "background-color": "#f8f9fa",
+                      "border-radius": "12px", "margin-bottom": "0.5rem"},
+        "icon": {"color": "#1f9d57", "font-size": "16px"},
+        "nav-link": {"font-size": "15px", "font-weight": "600", "color": "#444",
+                     "text-align": "center", "margin": "4px",
+                     "--hover-color": "#e8f5ee"},
+        "nav-link-selected": {"background-color": "#1f9d57", "color": "white"},
+    },
+)
+selected = selected or "Analizar mi alquiler"
 
 # ===========================================================================
-# TAB 1 — Analizar aviso
+# Analizar mi alquiler
 # ===========================================================================
-with tab1:
+if selected == "Analizar mi alquiler":
     model, results = load_model()
 
     # --- Example cards ---
@@ -558,9 +575,9 @@ with tab1:
             """)
 
 # ===========================================================================
-# TAB 2 — Mapa de precios
+# Mapa de precios
 # ===========================================================================
-with tab2:
+elif selected == "Mapa de precios":
     st.subheader("Precio promedio por distrito (S/mes)")
 
     stats = district_stats()
@@ -617,9 +634,9 @@ with tab2:
     )
 
 # ===========================================================================
-# TAB 3 — Sobre el modelo
+# Cómo funciona
 # ===========================================================================
-with tab3:
+elif selected == "Cómo funciona":
     model_loaded, res = load_model()
     st.subheader("Metodología")
     st.markdown(f"""
