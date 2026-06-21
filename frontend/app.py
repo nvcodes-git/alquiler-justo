@@ -380,7 +380,7 @@ elif selected == "Analizar mi alquiler":
         parsed_listing = st.session_state.claude_parsed
 
     if parsed_listing:
-        source = "Claude AI" if st.session_state.claude_parsed else "base de datos"
+        source = "autocompletado" if st.session_state.claude_parsed else "base de datos"
         st.success(
             f"✅ Datos cargados ({source}) — "
             "puedes modificar cualquier campo abajo antes de analizar."
@@ -389,10 +389,10 @@ elif selected == "Analizar mi alquiler":
     st.markdown("---")
 
     # --- Claude AI parser ---
-    with st.expander("🤖 O pega la descripción del aviso — Claude la parsea automáticamente"):
+    with st.expander("📋 ¿Tienes la descripción del aviso? Pégala y completamos el formulario"):
         st.caption(
             "Pega el texto del aviso (descripción, título, características) "
-            "y Claude extraerá m², dormitorios, precio, amenidades y más."
+            "y rellenamos m², dormitorios, precio, amenidades y más por ti."
         )
         desc_input = st.text_area(
             "Descripción del aviso",
@@ -400,7 +400,7 @@ elif selected == "Analizar mi alquiler":
             height=120,
             key="claude_desc_input",
         )
-        if st.button("🤖 Parsear con Claude", key="parse_claude"):
+        if st.button("Autocompletar formulario", key="parse_claude"):
             if desc_input.strip():
                 try:
                     import os
@@ -409,7 +409,7 @@ elif selected == "Analizar mi alquiler":
                     if not api_key:
                         st.error("ANTHROPIC_API_KEY no configurado. Configúralo en los secrets de Streamlit.")
                     else:
-                        with st.spinner("Claude analizando el aviso…"):
+                        with st.spinner("Analizando el aviso…"):
                             raw = parse_listing_text(desc_input.strip())
                         if raw:
                             features = claude_to_model_features(raw)
@@ -422,7 +422,7 @@ elif selected == "Analizar mi alquiler":
                                 "floor":        features.get("floor") or 1,
                                 "district":     features.get("district") or "miraflores",
                                 "amenities_raw": json.dumps({k: int(v) for k, v in am.items()}),
-                                "title":        "Aviso parseado por Claude",
+                                "title":        "Aviso autocompletado",
                             }
                             st.session_state.example_idx = None
                             st.rerun()
@@ -783,9 +783,9 @@ elif selected == "Tasar mi propiedad":
 # Asistente conversacional
 # ===========================================================================
 elif selected == "Asistente":
-    st.subheader("💬 Asistente AlquilerJusto")
+    st.subheader("💬 ¿Tienes dudas o estás buscando algún departamento en específico?")
     st.caption(
-        "Dime qué buscas en lenguaje natural y te muestro opciones reales del mercado. "
+        "Búscalo aquí. Dime qué buscas en lenguaje natural y te muestro opciones reales del mercado. "
         "Ej: «2 dormitorios en Miraflores hasta S/ 3,500» o «depto en Barranco entre 70 y 90 m²»."
     )
 
