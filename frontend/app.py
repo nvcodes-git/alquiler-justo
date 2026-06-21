@@ -241,7 +241,7 @@ def build_histogram(comp_prices, listed_price, fair_price) -> go.Figure:
                   annotation_text="Precio justo", annotation_position="top",
                   annotation_font_color="#1f9d57")
     fig.add_vline(x=listed_price, line_width=3, line_color="#dc3545",
-                  annotation_text="Este aviso", annotation_position="top left",
+                  annotation_text="Tu aviso", annotation_position="top left",
                   annotation_font_color="#dc3545")
     fig.update_layout(
         height=300, margin=dict(l=20, r=20, t=40, b=30),
@@ -265,28 +265,80 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
+MENU_OPTIONS = ["Inicio", "Analizar mi alquiler", "Tasar mi propiedad",
+                "Mapa de precios", "Cómo funciona"]
+# Routing override coming from landing-page cards (consumed once)
+_manual = st.session_state.pop("manual_select", None)
 selected = option_menu(
     menu_title=None,
-    options=["Analizar mi alquiler", "Mapa de precios", "Cómo funciona"],
-    icons=["search-heart", "geo-alt", "info-circle"],
+    options=MENU_OPTIONS,
+    icons=["house-heart", "search-heart", "cash-coin", "geo-alt", "info-circle"],
     orientation="horizontal",
     default_index=0,
+    manual_select=_manual,
+    key="mainmenu",
     styles={
         "container": {"padding": "0!important", "background-color": "#f8f9fa",
                       "border-radius": "12px", "margin-bottom": "0.5rem"},
         "icon": {"color": "#1f9d57", "font-size": "16px"},
-        "nav-link": {"font-size": "15px", "font-weight": "600", "color": "#444",
-                     "text-align": "center", "margin": "4px",
+        "nav-link": {"font-size": "14px", "font-weight": "600", "color": "#444",
+                     "text-align": "center", "margin": "3px",
                      "--hover-color": "#e8f5ee"},
         "nav-link-selected": {"background-color": "#1f9d57", "color": "white"},
     },
 )
-selected = selected or "Analizar mi alquiler"
+selected = selected or "Inicio"
+
+# ===========================================================================
+# Inicio — landing con selección de perfil
+# ===========================================================================
+if selected == "Inicio":
+    st.markdown("### ¿Qué necesitas hoy?")
+    st.caption("Elige tu perfil — usamos el mismo motor de datos para responder tu pregunta.")
+
+    c_tenant, c_owner = st.columns(2)
+    with c_tenant:
+        with st.container(border=True):
+            st.markdown("#### 🔍 Soy inquilino")
+            st.markdown(
+                "Estás por alquilar y quieres saber **si el precio es justo** "
+                "antes de firmar. Pega los datos del aviso y te decimos si está "
+                "bien preciado, justo o sobrevalorado — con evidencia del mercado."
+            )
+            st.markdown("&nbsp;", unsafe_allow_html=True)
+            if st.button("Analizar un alquiler →", key="go_tenant",
+                         use_container_width=True, type="primary"):
+                st.session_state.manual_select = 1
+                st.rerun()
+    with c_owner:
+        with st.container(border=True):
+            st.markdown("#### 💰 Soy propietario")
+            st.markdown(
+                "Tienes una propiedad y quieres alquilarla al **mejor precio posible** "
+                "sin que se quede meses vacía. Te damos el precio óptimo y 3 estrategias: "
+                "alquilar rápido, equilibrado o maximizar ingreso."
+            )
+            st.markdown("&nbsp;", unsafe_allow_html=True)
+            if st.button("Tasar mi propiedad →", key="go_owner",
+                         use_container_width=True, type="primary"):
+                st.session_state.manual_select = 2
+                st.rerun()
+
+    st.markdown("---")
+    h1, h2, h3 = st.columns(3)
+    h1.metric("Avisos analizados", f"{_res_for_header.n_obs:,}")
+    h2.metric("Distritos de Lima", f"{len(_res_for_header.districts)}")
+    h3.metric("Respuesta en", "< 5 seg")
+
+    st.caption(
+        "AlquilerJusto compara cada propiedad contra miles de alquileres reales "
+        "del mercado limeño usando un modelo de precios entrenado con datos vivos."
+    )
 
 # ===========================================================================
 # Analizar mi alquiler
 # ===========================================================================
-if selected == "Analizar mi alquiler":
+elif selected == "Analizar mi alquiler":
     model, results = load_model()
 
     # --- Example cards ---
@@ -573,6 +625,158 @@ if selected == "Analizar mi alquiler":
             consistentes con el spread natural entre precio de oferta y precio de transacción
             en Lima (~5-10%).
             """)
+
+# ===========================================================================
+# Tasar mi propiedad (propietario)
+# ===========================================================================
+elif selected == "Tasar mi propiedad":
+    model, results = load_model()
+
+    st.subheader("💰 ¿Cuánto deberías pedir por tu propiedad?")
+    st.caption(
+        "Ingresa las características de tu propiedad y te diremos el precio óptimo "
+        "de mercado, con estrategias para alquilar rápido o maximizar tu ingreso."
+    )
+
+    o1, o2 = st.columns(2)
+    with o1:
+        o_area = st.number_input("Área (m²)", min_value=15, max_value=600,
+                                 step=5, value=80, key="o_area")
+        o_beds = st.selectbox("Dormitorios", [0, 1, 2, 3, 4, 5], index=2, key="o_beds")
+        o_baths = st.selectbox("Baños", [1, 2, 3, 4], index=1, key="o_baths")
+    with o2:
+        o_dist = st.selectbox("Distrito", options=list(DISTRICT_META.keys()),
+                              format_func=lambda d: DISTRICT_META[d]["label"], key="o_dist")
+        o_floor = st.number_input("Piso", min_value=0, max_value=30, step=1,
+                                  value=3, key="o_floor")
+        st.markdown("**Amenidades de tu propiedad**")
+        oc1, oc2 = st.columns(2)
+        with oc1:
+            o_piscina  = st.checkbox("Piscina", key="o_pisc")
+            o_gym      = st.checkbox("Gimnasio", key="o_gym")
+            o_cochera  = st.checkbox("Cochera", key="o_coch")
+            o_ascensor = st.checkbox("Ascensor", key="o_asc")
+        with oc2:
+            o_terraza  = st.checkbox("Terraza", key="o_terr")
+            o_amoblado = st.checkbox("Amoblado", key="o_amob")
+            o_aire     = st.checkbox("Aire acond.", key="o_aire")
+            o_seg      = st.checkbox("Seguridad", key="o_seg")
+
+    o_amenities = {
+        "piscina": int(o_piscina), "gimnasio": int(o_gym),
+        "cochera": int(o_cochera), "ascensor": int(o_ascensor),
+        "terraza": int(o_terraza), "amoblado": int(o_amoblado),
+        "aire":    int(o_aire),    "seguridad": int(o_seg),
+    }
+
+    if st.button("💰 Calcular precio óptimo", type="primary", use_container_width=True):
+        pred = model.predict(
+            area_m2=float(o_area), bedrooms=int(o_beds), bathrooms=int(o_baths),
+            district=o_dist, floor=int(o_floor), amenities=o_amenities,
+        )
+        fair = pred.fair_price_pen
+
+        # Comparable price distribution for percentile positioning
+        comps = get_comparables(o_dist, float(o_area), int(o_beds), fair, DB_PATH, n=200)
+        comp_prices = comps["price_pen"] if not comps.empty else pd.Series([fair])
+
+        def _pct_at(price):
+            return float((comp_prices < price).mean() * 100)
+
+        # Three pricing strategies anchored on the fair price
+        rapido     = round(fair * 0.93, 0)
+        recomendado = fair
+        premium    = round(fair * 1.10, 0)
+
+        st.markdown(f"""
+        <div class="verdict-box verde">
+            <div class="big-number">💰 Precio de mercado: S/ {fair:,.0f}/mes</div>
+            <div class="subtitle">
+                Rango de confianza: S/ {pred.fair_price_low:,.0f} – S/ {pred.fair_price_high:,.0f}
+                &nbsp;|&nbsp; basado en {pred.n_comparables or len(comp_prices)} propiedades comparables
+            </div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        st.markdown("#### Elige tu estrategia de publicación")
+        s1, s2, s3 = st.columns(3)
+        strategies = [
+            (s1, "🟢 Alquila rápido", rapido,
+             "Por debajo del mercado. Atrae interés de inmediato, ideal si necesitas alquilar pronto."),
+            (s2, "🟡 Recomendado", recomendado,
+             "Precio justo de mercado. El mejor balance entre ingreso y tiempo de alquiler."),
+            (s3, "🔴 Maximiza ingreso", premium,
+             "Premium sobre el mercado. Mayor ingreso mensual, pero puede tardar más en alquilarse."),
+        ]
+        for col, title, price, desc in strategies:
+            with col:
+                with st.container(border=True):
+                    st.markdown(f"**{title}**")
+                    st.markdown(f"### S/ {price:,.0f}")
+                    st.caption(f"Más caro que el {_pct_at(price):.0f}% del mercado")
+                    st.caption(desc)
+
+        # Distribution chart with recommended price marked
+        if len(comp_prices) >= 5:
+            st.markdown("#### Tu propiedad vs el mercado")
+            fig = go.Figure()
+            fig.add_trace(go.Histogram(x=comp_prices.tolist(), nbinsx=24,
+                                       marker_color="#bdc3c7", opacity=0.85))
+            fig.add_vline(x=rapido, line_width=2, line_dash="dot", line_color="#28a745",
+                          annotation_text="Rápido", annotation_position="top")
+            fig.add_vline(x=recomendado, line_width=3, line_dash="dash", line_color="#1f9d57",
+                          annotation_text="Recomendado", annotation_position="top")
+            fig.add_vline(x=premium, line_width=2, line_dash="dot", line_color="#dc3545",
+                          annotation_text="Premium", annotation_position="top")
+            fig.update_layout(height=300, margin=dict(l=20, r=20, t=40, b=30),
+                              xaxis_title="Precio (S/mes)", yaxis_title="N° de propiedades",
+                              showlegend=False, paper_bgcolor="rgba(0,0,0,0)",
+                              plot_bgcolor="rgba(0,0,0,0)", bargap=0.05)
+            st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
+
+        # Why this price — decomposition
+        if pred.contributions:
+            with st.expander("🧩 ¿Por qué este precio? Ver desglose"):
+                contrib_fig = go.Figure(go.Waterfall(
+                    orientation="v",
+                    measure=["relative"] * len(pred.contributions) + ["total"],
+                    x=list(pred.contributions.keys()) + ["Precio de mercado"],
+                    y=list(pred.contributions.values()) + [0],
+                    text=[f"S/ {v:+,.0f}" for v in pred.contributions.values()]
+                         + [f"S/ {fair:,.0f}"],
+                    textposition="outside",
+                    connector={"line": {"color": "#bbb"}},
+                    increasing={"marker": {"color": "#2ecc71"}},
+                    decreasing={"marker": {"color": "#e67e22"}},
+                    totals={"marker": {"color": "#1f9d57"}},
+                ))
+                contrib_fig.update_layout(height=320, margin=dict(l=20, r=20, t=20, b=30),
+                                          paper_bgcolor="rgba(0,0,0,0)",
+                                          plot_bgcolor="rgba(0,0,0,0)",
+                                          yaxis_title="Aporte (S/)", showlegend=False)
+                st.plotly_chart(contrib_fig, use_container_width=True,
+                                config={"displayModeBar": False})
+
+        # Competing listings
+        if not comps.empty:
+            st.markdown("#### Propiedades similares publicadas ahora")
+            cards_html = '<div class="comp-grid">'
+            for _, row in comps.head(5).iterrows():
+                url = row.get("url") or "#"
+                bath = int(row["bathrooms"]) if pd.notna(row["bathrooms"]) else 1
+                cards_html += f"""
+                <div class="comp-card">
+                    <div class="comp-price">S/ {row['price_pen']:,.0f}/mes</div>
+                    <div class="comp-meta">
+                        {row['area_m2']:.0f} m²&nbsp;·&nbsp;{int(row['bedrooms'])} dorm&nbsp;·&nbsp;{bath} baño
+                    </div>
+                    <div class="comp-meta">{DISTRICT_LABELS.get(row['district'], row['district'])}</div>
+                    <div class="comp-link">
+                        <a href="{url}" target="_blank" rel="noopener">Ver aviso →</a>
+                    </div>
+                </div>"""
+            cards_html += "</div>"
+            st.markdown(cards_html, unsafe_allow_html=True)
 
 # ===========================================================================
 # Mapa de precios
