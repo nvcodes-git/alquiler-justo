@@ -2,7 +2,7 @@
 AlquilerJusto — Streamlit frontend.
 
 Tabs:
-  1. Analizar aviso  — paste URL or fill form → verdict + comparables
+  1. Analizar aviso  — pick example or fill form → verdict + comparable cards
   2. Mapa de precios — Folium choropleth by district
   3. Sobre el modelo — methodology explainer
 """
@@ -36,17 +36,55 @@ st.set_page_config(
 # ---------------------------------------------------------------------------
 st.markdown("""
 <style>
+/* Verdict box */
 .verdict-box {
     padding: 1.5rem 2rem;
     border-radius: 12px;
     text-align: center;
     margin: 1rem 0;
 }
-.verde  { background: #d4edda; border: 2px solid #28a745; }
+.verde    { background: #d4edda; border: 2px solid #28a745; }
 .amarillo { background: #fff3cd; border: 2px solid #ffc107; }
-.rojo   { background: #f8d7da; border: 2px solid #dc3545; }
+.rojo     { background: #f8d7da; border: 2px solid #dc3545; }
 .big-number { font-size: 2.4rem; font-weight: 700; }
-.subtitle   { font-size: 0.9rem; color: #666; margin-top: 0.3rem; }
+.subtitle   { font-size: 0.9rem; color: #555; margin-top: 0.3rem; }
+
+/* Comparable cards */
+.comp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+    gap: 1rem;
+    margin: 1rem 0;
+}
+.comp-card {
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    padding: 1rem 1.1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.comp-price  { font-size: 1.15rem; font-weight: 700; color: #2c3e50; }
+.comp-meta   { font-size: 0.82rem; color: #666; }
+.comp-diff-down { font-size: 0.82rem; color: #28a745; font-weight: 600; }
+.comp-diff-up   { font-size: 0.82rem; color: #dc3545; font-weight: 600; }
+.comp-link {
+    margin-top: auto;
+    padding-top: 0.6rem;
+}
+.comp-link a {
+    display: block;
+    padding: 0.4rem 0;
+    background: #2ecc71;
+    color: white !important;
+    text-align: center;
+    border-radius: 6px;
+    text-decoration: none !important;
+    font-size: 0.83rem;
+    font-weight: 600;
+}
+.comp-link a:hover { background: #27ae60; }
 </style>
 """, unsafe_allow_html=True)
 
@@ -59,6 +97,7 @@ DISTRICT_META = {
     "surco":      {"lat": -12.1477, "lon": -76.9934, "label": "Santiago de Surco"},
     "magdalena":  {"lat": -12.0925, "lon": -77.0714, "label": "Magdalena del Mar"},
 }
+DISTRICT_LABELS = {d: m["label"] for d, m in DISTRICT_META.items()}
 
 
 def _price_color(avg_pen: float) -> str:
@@ -69,6 +108,7 @@ def _price_color(avg_pen: float) -> str:
     if avg_pen >= 2500:
         return "#f1c40f"
     return "#27ae60"
+
 
 DB_PATH = Path("data/listings.db")
 
@@ -138,30 +178,46 @@ tab1, tab2, tab3 = st.tabs(["🔍 Analizar aviso", "🗺️ Mapa de precios", "�
 with tab1:
     model, results = load_model()
 
-    st.subheader("Elige un ejemplo real o completa el formulario")
-
-    # Quick-load buttons with real listings from the DB
+    # --- Example cards ---
+    st.markdown("#### Ejemplos reales del mercado — elige uno para empezar")
     examples = load_examples()
     if "example_idx" not in st.session_state:
         st.session_state.example_idx = None
 
-    DISTRICT_LABELS = {d: m["label"] for d, m in DISTRICT_META.items()}
-
     ex_cols = st.columns(len(examples))
     for i, ex in enumerate(examples):
         label = DISTRICT_LABELS.get(ex["district"], ex["district"])
-        btn_label = f"📍 {label}\n\nS/ {int(ex['price_pen']):,} · {int(ex['area_m2'])} m² · {int(ex['bedrooms'])} dorm"
-        if ex_cols[i].button(btn_label, key=f"ex_{i}", use_container_width=True):
-            st.session_state.example_idx = i
+        am = json.loads(ex.get("amenities_raw") or "{}")
+        tags = [k for k, v in am.items() if v]
+        tag_str = " · ".join(tags[:3]) if tags else "sin amenidades"
+        with ex_cols[i]:
+            with st.container(border=True):
+                st.markdown(f"**📍 {label}**")
+                st.markdown(f"### S/ {int(ex['price_pen']):,}")
+                st.caption(
+                    f"{int(ex['area_m2'])} m²  ·  {int(ex['bedrooms'])} dorm  ·  "
+                    f"{int(ex['bathrooms'])} baño"
+                )
+                st.caption(tag_str)
+                if st.button("Analizar este →", key=f"ex_{i}", use_container_width=True):
+                    st.session_state.example_idx = i
+                    st.rerun()
+
+    # Show which example is loaded
+    parsed_listing = (
+        examples[st.session_state.example_idx]
+        if st.session_state.example_idx is not None else None
+    )
+    if parsed_listing:
+        st.success(
+            f"✅ Cargado: **{parsed_listing.get('title', 'aviso real')}** — "
+            f"puedes modificar cualquier campo abajo antes de analizar."
+        )
 
     st.markdown("---")
+    st.markdown("#### ✏️ Personaliza los datos del aviso")
 
-    # Use selected example if any
-    parsed_listing = examples[st.session_state.example_idx] if st.session_state.example_idx is not None else None
-    if parsed_listing:
-        st.info(f"✅ Cargado: {parsed_listing.get('title', 'Aviso real de la base de datos')}")
-
-    amenities_raw = json.loads(parsed_listing.get("amenities_raw", "{}")) if parsed_listing else {}
+    amenities_raw = json.loads(parsed_listing.get("amenities_raw") or "{}") if parsed_listing else {}
 
     col1, col2 = st.columns(2)
     with col1:
@@ -233,17 +289,17 @@ with tab1:
         # Verdict box
         css_class = {"buen_precio": "verde", "justo": "amarillo", "sobrevalorado": "rojo"}[pred.verdict]
         label_map  = {
-            "buen_precio":    "Buen precio",
-            "justo":          "Precio justo",
-            "sobrevalorado":  "Sobrevalorado",
+            "buen_precio":   "Buen precio",
+            "justo":         "Precio justo",
+            "sobrevalorado": "Sobrevalorado",
         }
         st.markdown(f"""
         <div class="verdict-box {css_class}">
             <div class="big-number">{pred.verdict_emoji} {label_map[pred.verdict]}</div>
             <div class="subtitle">
-                Precio justo estimado: <strong>S/ {pred.fair_price_pen:,.0f}/mes</strong> &nbsp;|&nbsp;
-                Desvío: <strong>{pred.deviation_pct:+.1f}%</strong> &nbsp;|&nbsp;
-                Percentil: <strong>{pred.percentile:.0f}° de avisos similares</strong>
+                Precio justo estimado: <strong>S/ {pred.fair_price_pen:,.0f}/mes</strong>
+                &nbsp;|&nbsp; Desvío: <strong>{pred.deviation_pct:+.1f}%</strong>
+                &nbsp;|&nbsp; Percentil: <strong>{pred.percentile:.0f}° de avisos similares</strong>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -252,36 +308,36 @@ with tab1:
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Precio publicado", f"S/ {listed_price:,.0f}")
         m2.metric("Precio justo",     f"S/ {pred.fair_price_pen:,.0f}",
-                  delta=f"{pred.deviation_pct:+.1f}%",
-                  delta_color="inverse")
+                  delta=f"{pred.deviation_pct:+.1f}%", delta_color="inverse")
         m3.metric("Percentil",        f"{pred.percentile:.0f}°")
         m4.metric("Comparables",      f"{pred.n_comparables} avisos")
 
-        # Comparables table
+        # Comparable cards
         st.subheader("📋 Avisos comparables en el mercado")
         comps = get_comparables(district, float(area), int(bedrooms),
                                 float(listed_price), DB_PATH)
         if not comps.empty:
-            comps_display = comps.copy()
-            comps_display["precio"] = comps_display["price_pen"].apply(lambda x: f"S/ {x:,.0f}")
-            comps_display["área"]   = comps_display["area_m2"].apply(lambda x: f"{x:.0f} m²")
-            comps_display["diff"]   = comps_display["diff_vs_aviso_pct"].apply(
-                lambda x: f"{'↓' if x < 0 else '↑'} {abs(x):.1f}%"
-            )
-            comps_display["link"]   = comps_display["url"].apply(
-                lambda u: f"[ver aviso]({u})" if u else ""
-            )
-            comps_display["Distrito"] = comps_display["district"].map(
-                lambda d: DISTRICT_META.get(d, {}).get("label", d)
-            )
-            st.dataframe(
-                comps_display[["Distrito", "precio", "área", "bedrooms", "bathrooms", "diff", "link"]]
-                .rename(columns={"precio": "Precio", "área": "Área",
-                                 "bedrooms": "Dorm", "bathrooms": "Baños",
-                                 "diff": "vs tu aviso", "link": ""}),
-                use_container_width=True,
-                hide_index=True,
-            )
+            cards_html = '<div class="comp-grid">'
+            for _, row in comps.iterrows():
+                diff = row["diff_vs_aviso_pct"]
+                diff_cls  = "comp-diff-down" if diff < 0 else "comp-diff-up"
+                diff_text = f"↓ {abs(diff):.0f}% más barato" if diff < 0 else f"↑ {diff:.0f}% más caro"
+                url = row.get("url") or "#"
+                bath = int(row["bathrooms"]) if pd.notna(row["bathrooms"]) else 1
+                cards_html += f"""
+                <div class="comp-card">
+                    <div class="comp-price">S/ {row['price_pen']:,.0f}/mes</div>
+                    <div class="comp-meta">
+                        {row['area_m2']:.0f} m²&nbsp;·&nbsp;{int(row['bedrooms'])} dorm&nbsp;·&nbsp;{bath} baño
+                    </div>
+                    <div class="comp-meta">{DISTRICT_LABELS.get(row['district'], row['district'])}</div>
+                    <div class="{diff_cls}">{diff_text}</div>
+                    <div class="comp-link">
+                        <a href="{url}" target="_blank" rel="noopener">Ver aviso →</a>
+                    </div>
+                </div>"""
+            cards_html += "</div>"
+            st.markdown(cards_html, unsafe_allow_html=True)
         else:
             st.info("No se encontraron avisos suficientemente similares en la base de datos.")
 
@@ -419,7 +475,7 @@ with tab3:
     |---|---|---|
     | Web scraping (requests + BeautifulSoup) | 2-3 | `scraping/infocasas.py` — extrae 1,196 avisos reales |
     | GeoPandas + Folium + Streamlit | 3-7 | `frontend/app.py` — mapa coroplético interactivo |
-    | Claude AI (extracción estructurada) | 14 | `ai/parse_listing.py` — parsing de descripciones libres |
+    | Regresión hedónica OLS (statsmodels) | 8-10 | `backend/app/model.py` — R²=0.776 sobre 912 avisos |
 
     ### Limitaciones
     - **Precio de oferta ≠ precio de transacción**: modelamos el mercado de avisos publicados.
@@ -428,5 +484,3 @@ with tab3:
       El modelo es descriptivo, no causal.
     - **Distritos con <20 avisos**: se muestran con advertencia de datos insuficientes.
     """)
-
-
