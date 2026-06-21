@@ -20,8 +20,6 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.app.comparables import get_comparables
 from backend.app.model import get_model
-from scraping.listing_parser import parse_listing_url
-from scraping.utils import get_session
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -83,6 +81,27 @@ def load_model():
 
 
 @st.cache_data(show_spinner=False)
+def load_examples() -> list[dict]:
+    import sqlite3
+    conn = sqlite3.connect(DB_PATH)
+    rows = []
+    for district in ["miraflores", "san-isidro", "surco", "magdalena"]:
+        df = pd.read_sql_query("""
+            SELECT district, price_pen, area_m2, bedrooms, bathrooms,
+                   floor, amenities_raw, title, url
+            FROM listings
+            WHERE district = ?
+              AND price_pen IS NOT NULL AND area_m2 IS NOT NULL
+              AND bedrooms IS NOT NULL AND bedrooms > 0
+            LIMIT 1 OFFSET 3
+        """, conn, params=(district,))
+        if not df.empty:
+            rows.append(df.iloc[0].to_dict())
+    conn.close()
+    return rows
+
+
+@st.cache_data(show_spinner=False)
 def district_stats() -> pd.DataFrame:
     import sqlite3
     conn = sqlite3.connect(DB_PATH)
@@ -119,34 +138,29 @@ tab1, tab2, tab3 = st.tabs(["🔍 Analizar aviso", "🗺️ Mapa de precios", "�
 with tab1:
     model, results = load_model()
 
-    st.subheader("Pega la URL del aviso o completa el formulario")
+    st.subheader("Elige un ejemplo real o completa el formulario")
 
-    url_input = st.text_input(
-        "URL del departamento (Infocasas)",
-        placeholder="https://www.infocasas.com.pe/...",
-        help="Pega la URL directa del aviso. Si no tienes URL, completa el formulario abajo.",
-    )
+    # Quick-load buttons with real listings from the DB
+    examples = load_examples()
+    if "example_idx" not in st.session_state:
+        st.session_state.example_idx = None
 
-    parsed_listing = None
-    auto_filled    = False
+    DISTRICT_LABELS = {d: m["label"] for d, m in DISTRICT_META.items()}
 
-    if url_input.strip():
-        with st.spinner("Obteniendo datos del aviso…"):
-            sess = get_session()
-            parsed_listing = parse_listing_url(url_input.strip(), sess)
-
-        if parsed_listing:
-            st.success("✅ Datos del aviso obtenidos automáticamente")
-            auto_filled = True
-        else:
-            st.warning(
-                "No pudimos extraer datos automáticamente de esa URL. "
-                "Completa el formulario manualmente."
-            )
+    ex_cols = st.columns(len(examples))
+    for i, ex in enumerate(examples):
+        label = DISTRICT_LABELS.get(ex["district"], ex["district"])
+        btn_label = f"📍 {label}\n\nS/ {int(ex['price_pen']):,} · {int(ex['area_m2'])} m² · {int(ex['bedrooms'])} dorm"
+        if ex_cols[i].button(btn_label, key=f"ex_{i}", use_container_width=True):
+            st.session_state.example_idx = i
 
     st.markdown("---")
 
-    # Form (pre-filled if URL parsed successfully)
+    # Use selected example if any
+    parsed_listing = examples[st.session_state.example_idx] if st.session_state.example_idx is not None else None
+    if parsed_listing:
+        st.info(f"✅ Cargado: {parsed_listing.get('title', 'Aviso real de la base de datos')}")
+
     amenities_raw = json.loads(parsed_listing.get("amenities_raw", "{}")) if parsed_listing else {}
 
     col1, col2 = st.columns(2)
