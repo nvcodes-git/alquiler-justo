@@ -144,11 +144,34 @@ h1, h2, h3, h4, h5 {
     border: 1px solid rgba(11,61,44,0.08) !important;
     background: #fff;
     box-shadow: var(--aj-card-sh);
+    overflow: hidden;
     transition: transform .18s ease, box-shadow .18s ease;
 }
 [data-testid="stVerticalBlockBorderWrapper"]:hover {
     transform: translateY(-3px);
     box-shadow: var(--aj-card-sh-h);
+}
+
+/* Banner de distrito (tope de las tarjetas de ejemplo) */
+.dist-banner {
+    margin: -1rem -1rem 0.7rem -1rem;
+    height: 88px;
+    display: flex; align-items: flex-end;
+    padding: 0.6rem 0.9rem;
+    position: relative; overflow: hidden;
+}
+.dist-banner .ico {
+    position: absolute; right: -8px; top: -14px;
+    font-size: 66px; opacity: 0.22;
+}
+.dist-banner::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, rgba(0,0,0,0) 35%, rgba(0,0,0,0.42));
+}
+.dist-banner .dn {
+    position: relative; z-index: 2; color: #fff; font-weight: 800;
+    font-family: 'Plus Jakarta Sans', sans-serif; font-size: 1.05rem;
+    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
 }
 
 /* ───────── Métricas ───────── */
@@ -239,6 +262,22 @@ DISTRICT_META = {
     "pueblo-libre":{"lat": -12.0742, "lon": -77.0630, "label": "Pueblo Libre"},
 }
 DISTRICT_LABELS = {d: m["label"] for d, m in DISTRICT_META.items()}
+
+# Gradiente de marca por distrito (para banners de tarjetas)
+DISTRICT_GRADIENTS = {
+    "miraflores":  "linear-gradient(135deg,#0e7490,#06b6d4)",
+    "san-isidro":  "linear-gradient(135deg,#1e3a8a,#3b82f6)",
+    "barranco":    "linear-gradient(135deg,#7e22ce,#db2777)",
+    "magdalena":   "linear-gradient(135deg,#0369a1,#0ea5e9)",
+    "san-miguel":  "linear-gradient(135deg,#c2410c,#f97316)",
+    "surco":       "linear-gradient(135deg,#15803d,#22c55e)",
+    "san-borja":   "linear-gradient(135deg,#0f766e,#14b8a6)",
+    "la-molina":   "linear-gradient(135deg,#a16207,#eab308)",
+    "jesus-maria": "linear-gradient(135deg,#9f1239,#e11d48)",
+    "lince":       "linear-gradient(135deg,#334155,#64748b)",
+    "pueblo-libre":"linear-gradient(135deg,#9a3412,#c2410c)",
+}
+DEFAULT_GRADIENT = "linear-gradient(135deg,#13794f,#2ecc71)"
 
 
 def _price_color(avg_pen: float) -> str:
@@ -490,9 +529,15 @@ if selected == "Analizar un alquiler":
         am = json.loads(ex.get("amenities_raw") or "{}")
         tags = [k for k, v in am.items() if v]
         tag_str = " · ".join(tags[:3]) if tags else "sin amenidades"
+        grad = DISTRICT_GRADIENTS.get(ex["district"], DEFAULT_GRADIENT)
         with ex_cols[i]:
             with st.container(border=True):
-                st.markdown(f"**📍 {label}**")
+                st.markdown(
+                    f'<div class="dist-banner" style="background:{grad}">'
+                    f'<span class="ico">🏙️</span>'
+                    f'<span class="dn">📍 {label}</span></div>',
+                    unsafe_allow_html=True,
+                )
                 st.markdown(f"### S/ {int(ex['price_pen']):,}")
                 st.caption(
                     f"{int(ex['area_m2'])} m²  ·  {int(ex['bedrooms'])} dorm  ·  "
