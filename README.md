@@ -51,11 +51,11 @@ Infocasas.pe ──scraping──► SQLite (1,196 avisos)
 
 | Métrica | Valor |
 |---|---|
-| R² | 0.776 |
-| R² ajustado | 0.772 |
-| RMSE | ~29% del precio medio |
-| Observaciones | 912 avisos |
-| Distritos | Miraflores, San Isidro, Surco, Magdalena |
+| R² | 0.792 |
+| R² ajustado | 0.788 |
+| RMSE | ~27% del precio medio |
+| Observaciones | 1,433 avisos |
+| Distritos | 11 distritos de Lima Metropolitana |
 
 **Coeficientes principales** (log-lineal, errores robustos HC1):
 - `log(m²)` → +0.72 (elasticidad precio-área)

@@ -92,10 +92,17 @@ st.markdown("""
 # District metadata (centroids for map)
 # ---------------------------------------------------------------------------
 DISTRICT_META = {
-    "miraflores": {"lat": -12.1219, "lon": -77.0299, "label": "Miraflores"},
-    "san-isidro": {"lat": -12.0969, "lon": -77.0367, "label": "San Isidro"},
-    "surco":      {"lat": -12.1477, "lon": -76.9934, "label": "Santiago de Surco"},
-    "magdalena":  {"lat": -12.0925, "lon": -77.0714, "label": "Magdalena del Mar"},
+    "miraflores":  {"lat": -12.1219, "lon": -77.0299, "label": "Miraflores"},
+    "san-isidro":  {"lat": -12.0969, "lon": -77.0367, "label": "San Isidro"},
+    "surco":       {"lat": -12.1477, "lon": -76.9934, "label": "Santiago de Surco"},
+    "magdalena":   {"lat": -12.0925, "lon": -77.0714, "label": "Magdalena del Mar"},
+    "san-miguel":  {"lat": -12.0771, "lon": -77.0982, "label": "San Miguel"},
+    "barranco":    {"lat": -12.1530, "lon": -77.0197, "label": "Barranco"},
+    "san-borja":   {"lat": -12.0990, "lon": -76.9952, "label": "San Borja"},
+    "la-molina":   {"lat": -12.0820, "lon": -76.9432, "label": "La Molina"},
+    "jesus-maria": {"lat": -12.0703, "lon": -77.0469, "label": "Jesús María"},
+    "lince":       {"lat": -12.0833, "lon": -77.0361, "label": "Lince"},
+    "pueblo-libre":{"lat": -12.0742, "lon": -77.0630, "label": "Pueblo Libre"},
 }
 DISTRICT_LABELS = {d: m["label"] for d, m in DISTRICT_META.items()}
 
@@ -125,7 +132,7 @@ def load_examples() -> list[dict]:
     import sqlite3
     conn = sqlite3.connect(DB_PATH)
     rows = []
-    for district in ["miraflores", "san-isidro", "surco", "magdalena"]:
+    for district in ["miraflores", "san-isidro", "barranco", "san-miguel"]:
         df = pd.read_sql_query("""
             SELECT district, price_pen, area_m2, bedrooms, bathrooms,
                    floor, amenities_raw, title, url
