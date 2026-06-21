@@ -12,7 +12,7 @@ Buscar departamento en Lima toma entre 4 y 8 semanas. No es por falta de oferta 
 
 ## La solución
 
-AlquilerJusto scrapea avisos de Infocasas.pe, los normaliza automáticamente (m², dormitorios, amenities, piso, distrito), y los compara contra un modelo hedónico entrenado sobre 1,196 avisos reales de Lima. Pegás el URL o completás el formulario y en menos de 5 segundos obtenés:
+AlquilerJusto scrapea avisos de Infocasas.pe, los normaliza automáticamente (m², dormitorios, amenities, piso, distrito), y los compara contra un modelo hedónico entrenado sobre ~1,400 avisos reales de Lima. Pegás el URL o completás el formulario y en menos de 5 segundos obtenés:
 
 - **Precio justo de mercado** estimado por el modelo
 - **Percentil** contra avisos similares en la misma zona
@@ -26,12 +26,12 @@ AlquilerJusto scrapea avisos de Infocasas.pe, los normaliza automáticamente (m�
 ## Arquitectura
 
 ```
-Infocasas.pe ──scraping──► SQLite (1,196 avisos)
+Infocasas.pe ──scraping──► SQLite (1,475 avisos)
                                 │
                           OLS hedónico
                      ln(precio) ~ ln(m²) + dorms + baños
                      + piso + distrito + amenities
-                          R² = 0.776  n = 912
+                          R² = 0.824  n = 1,445
                                 │
                         Streamlit frontend
                     ┌───────────┴──────────────┐
@@ -46,38 +46,38 @@ Infocasas.pe ──scraping──► SQLite (1,196 avisos)
 | Web scraping (requests + BeautifulSoup) | 2-3 | `scraping/infocasas.py` |
 | GeoPandas + Folium + Streamlit | 3-7 | `frontend/app.py` |
 | Regresión hedónica (statsmodels OLS) | 8-10 | `backend/app/model.py` |
+| Claude API (extracción estructurada + asistente RAG) | 14 | `ai/parse_listing.py`, `ai/assistant.py` |
 
 ## Resultados del modelo
 
 | Métrica | Valor |
 |---|---|
-| R² | 0.792 |
-| R² ajustado | 0.788 |
-| RMSE | ~27% del precio medio |
-| Observaciones | 1,433 avisos |
+| R² | 0.824 |
+| R² ajustado | 0.822 |
+| RMSE | ~25% del precio medio |
+| Observaciones | 1,445 avisos |
 | Distritos | 11 distritos de Lima Metropolitana |
 
-**Coeficientes principales** (log-lineal, errores robustos HC1):
-- `log(m²)` → +0.72 (elasticidad precio-área)
-- San Isidro → +24% vs Magdalena (referencia)
-- Miraflores → +19%
-- Cochera → +16%
-- Ascensor → +9%
+**Lecturas del modelo** (log-lineal, errores robustos HC1):
+- `log(m²)` → +0.72 (elasticidad precio-área: doblar el área ≈ +65% precio)
+- Amenidades: ascensor ≈ +8%, amoblado ≈ +8%, cochera ≈ +5%
+- Distritos más caros (mediana): San Isidro S/4,800, Miraflores S/3,563, San Borja S/3,224
+- Más accesibles: San Miguel S/1,900, Pueblo Libre S/2,200
 
 ## Estructura del repo
 
 ```
 alquiler-justo/
-├── frontend/app.py          # Streamlit UI (3 tabs)
+├── frontend/app.py          # Streamlit UI (inicio, analizar, tasar, asistente, mapa)
 ├── backend/app/
 │   ├── model.py             # OLS hedónico + predicción
 │   └── comparables.py       # top-5 avisos similares
 ├── scraping/
-│   ├── infocasas.py         # scraper principal (1,196 avisos)
+│   ├── infocasas.py         # scraper principal (~1,475 avisos)
 │   ├── listing_parser.py    # fetch de URL individual
 │   └── utils.py             # SQLite helpers + rate limiter
 ├── data/
-│   ├── listings.db          # 1,196 avisos (SQLite, ~1.8 MB)
+│   ├── listings.db          # ~1,475 avisos (SQLite)
 │   └── samples/             # muestra 60 filas para el repo
 ├── notebooks/
 │   └── 01_eda.ipynb         # EDA: distribuciones, correlaciones, residuos
@@ -98,8 +98,8 @@ No requiere API key para el flujo principal. La DB (`data/listings.db`) ya está
 
 ## Roadmap
 
-- [x] Scraper Infocasas (1,196 avisos, 4 distritos)
-- [x] Modelo hedónico OLS — R² = 0.776
+- [x] Scraper Infocasas (~1,475 avisos, 11 distritos)
+- [x] Modelo hedónico OLS — R² = 0.82
 - [x] Streamlit con formulario + mapa Folium
 - [x] Deploy público en Streamlit Cloud
 - [ ] Parser de URL para cualquier aviso de Infocasas

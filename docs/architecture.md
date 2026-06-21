@@ -9,7 +9,7 @@
 │  Infocasas.pe  ──── __NEXT_DATA__ JSON ────►  scraping/        │
 │  (11 distritos)      (sin JS rendering)        infocasas.py    │
 └────────────────────────────────┬────────────────────────────────┘
-                                 │ 1,196+ avisos
+                                 │ 1,475 avisos
                                  ▼
 ┌─────────────────────────────────────────────────────────────────┐
 │                     ALMACENAMIENTO                              │
@@ -32,8 +32,8 @@
 │  baños, piso, distrito, │           │   piso 5, S/2200"       │
 │  amenidades)            │           │        ↓                │
 │                         │           │  {bedrooms: 2,          │
-│  R² = 0.776 · n = 912   │           │   cochera: true, ...}   │
-│  RMSE ≈ 29%             │           │                         │
+│  R² = 0.824 · n = 1,445   │           │   cochera: true, ...}   │
+│  RMSE ≈ 25%             │           │                         │
 └────────────┬────────────┘           └────────────┬────────────┘
              │                                     │
              │         features estructurados      │
@@ -117,17 +117,17 @@ Infocasas HTML
 ## Coeficientes del modelo (referencia rápida)
 
 ```
-ln(precio) = 6.87                    ← base (Magdalena, sin amenidades)
+ln(precio) = ≈8.3                    ← base (Barranco = referencia, sin amenidades)
            + 0.716 · ln(m²)          ← elasticidad área
            + 0.042 · dormitorios
            + 0.085 · baños
            + 0.003 · piso
-           + 0.193 · [Miraflores]    ← prima +21%
-           + 0.239 · [San Isidro]    ← prima +27%
+           + 0.000 · [Miraflores]    ← ~referencia (Barranco)
+           + 0.013 · [San Isidro]    ← distrito top por mediana
            - 0.047 · [Surco]
-           + 0.156 · cochera         ← +17%
-           + 0.094 · ascensor        ← +10%
-           + 0.093 · amoblado        ← +10%
+           + 0.053 · cochera         ← +5%
+           + 0.079 · ascensor        ← +8%
+           + 0.074 · amoblado        ← +8%
            + 0.088 · terraza
            + 0.087 · gimnasio
            + ...
