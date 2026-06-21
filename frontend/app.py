@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from backend.app.comparables import get_comparables
 from backend.app.model import get_model
+from ai.assistant import parse_query, relax_search, DISTRICTS as ASSISTANT_DISTRICTS
 
 # ---------------------------------------------------------------------------
 # Page config
@@ -266,13 +267,13 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 MENU_OPTIONS = ["Inicio", "Analizar mi alquiler", "Tasar mi propiedad",
-                "Mapa de precios", "Cómo funciona"]
+                "Asistente", "Mapa de precios", "Cómo funciona"]
 # Routing override coming from landing-page cards (consumed once)
 _manual = st.session_state.pop("manual_select", None)
 selected = option_menu(
     menu_title=None,
     options=MENU_OPTIONS,
-    icons=["house-heart", "search-heart", "cash-coin", "geo-alt", "info-circle"],
+    icons=["house-heart", "search-heart", "cash-coin", "chat-dots", "geo-alt", "info-circle"],
     orientation="horizontal",
     default_index=0,
     manual_select=_manual,
@@ -777,6 +778,85 @@ elif selected == "Tasar mi propiedad":
                 </div>"""
             cards_html += "</div>"
             st.markdown(cards_html, unsafe_allow_html=True)
+
+# ===========================================================================
+# Asistente conversacional
+# ===========================================================================
+elif selected == "Asistente":
+    st.subheader("💬 Asistente AlquilerJusto")
+    st.caption(
+        "Dime qué buscas en lenguaje natural y te muestro opciones reales del mercado. "
+        "Ej: «2 dormitorios en Miraflores hasta S/ 3,500» o «depto en Barranco entre 70 y 90 m²»."
+    )
+
+    def _render_listing_cards(df):
+        cards = '<div class="comp-grid">'
+        for _, row in df.iterrows():
+            url = row.get("url") or "#"
+            bath = int(row["bathrooms"]) if pd.notna(row["bathrooms"]) else 1
+            label = ASSISTANT_DISTRICTS.get(row["district"], row["district"])
+            cards += f"""
+            <div class="comp-card">
+                <div class="comp-price">S/ {row['price_pen']:,.0f}/mes</div>
+                <div class="comp-meta">{row['area_m2']:.0f} m²&nbsp;·&nbsp;{int(row['bedrooms'])} dorm&nbsp;·&nbsp;{bath} baño</div>
+                <div class="comp-meta">{label}</div>
+                <div class="comp-link"><a href="{url}" target="_blank" rel="noopener">Ver aviso →</a></div>
+            </div>"""
+        cards += "</div>"
+        return cards
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = [{
+            "role": "assistant",
+            "text": "¡Hola! 👋 Cuéntame qué departamento buscas: distrito, dormitorios, "
+                    "metraje y tu presupuesto. Yo te muestro las mejores opciones del mercado.",
+            "df": None,
+        }]
+
+    # Render history
+    for msg in st.session_state.chat_history:
+        with st.chat_message(msg["role"], avatar="🏠" if msg["role"] == "assistant" else None):
+            st.markdown(msg["text"])
+            if msg.get("df") is not None and not msg["df"].empty:
+                st.markdown(_render_listing_cards(msg["df"]), unsafe_allow_html=True)
+
+    prompt = st.chat_input("Ej: 2 dorm en Surco hasta S/ 4,000")
+    if prompt:
+        st.session_state.chat_history.append({"role": "user", "text": prompt, "df": None})
+
+        filters = parse_query(prompt)
+        if not filters:
+            reply = ("No logré entender los criterios. Prueba indicando distrito, "
+                     "dormitorios, metraje o presupuesto. Ej: «3 dorm en San Isidro hasta S/ 6,000».")
+            df = None
+        else:
+            df, notes = relax_search(filters, DB_PATH, limit=6)
+            crit = []
+            if filters.get("district"):
+                crit.append(ASSISTANT_DISTRICTS.get(filters["district"], filters["district"]))
+            if filters.get("bedrooms") is not None:
+                crit.append(f"{filters['bedrooms']} dorm")
+            if filters.get("area_min") or filters.get("area_max"):
+                lo = f"{filters.get('area_min', 0):.0f}" if filters.get("area_min") else "0"
+                hi = f"{filters.get('area_max'):.0f}" if filters.get("area_max") else "∞"
+                crit.append(f"{lo}–{hi} m²")
+            if filters.get("price_min") or filters.get("price_max"):
+                lo = f"S/{filters.get('price_min'):,.0f}" if filters.get("price_min") else "S/0"
+                hi = f"S/{filters.get('price_max'):,.0f}" if filters.get("price_max") else "sin tope"
+                crit.append(f"{lo}–{hi}")
+            crit_str = ", ".join(crit) if crit else "tu búsqueda"
+
+            if df is not None and not df.empty:
+                reply = f"Encontré **{len(df)} opciones** para {crit_str}:"
+                if notes:
+                    reply += f"\n\n_Ajusté la búsqueda: {'; '.join(notes)}._"
+            else:
+                reply = (f"No encontré avisos para {crit_str} ni relajando los filtros. "
+                         "Intenta ampliar el presupuesto o el distrito.")
+                df = None
+
+        st.session_state.chat_history.append({"role": "assistant", "text": reply, "df": df})
+        st.rerun()
 
 # ===========================================================================
 # Mapa de precios
