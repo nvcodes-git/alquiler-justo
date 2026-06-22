@@ -392,6 +392,83 @@ def build_histogram(comp_prices, listed_price, fair_price) -> go.Figure:
 
 
 # ---------------------------------------------------------------------------
+# Cuentas y freemium (demo: estado en sesión, sin persistencia real)
+# ---------------------------------------------------------------------------
+FREE_LIMIT = 3  # análisis gratis para usuarios anónimos
+
+for _k, _v in {"user": None, "free_used": 0}.items():
+    if _k not in st.session_state:
+        st.session_state[_k] = _v
+
+
+def _gate_blocked() -> bool:
+    """True si el usuario anónimo ya agotó sus análisis gratis."""
+    return st.session_state.user is None and st.session_state.free_used >= FREE_LIMIT
+
+
+def _register_use():
+    """Cuenta un análisis si el usuario es anónimo."""
+    if st.session_state.user is None:
+        st.session_state.free_used += 1
+
+
+@st.dialog("Crea tu cuenta")
+def _signup_dialog():
+    st.caption("Empieza gratis. Sin tarjeta.")
+    email = st.text_input("Correo", key="su_email", placeholder="tu@correo.com")
+    st.text_input("Contraseña", key="su_pass", type="password")
+    plan = st.radio("Plan", ["Gratis", "Premium (S/30/mes)"], key="su_plan", horizontal=True)
+    if st.button("Crear cuenta", type="primary", use_container_width=True):
+        if email and "@" in email:
+            st.session_state.user = {
+                "email": email,
+                "plan": "Premium" if plan.startswith("Premium") else "Gratis",
+            }
+            st.rerun()
+        else:
+            st.error("Ingresa un correo válido.")
+
+
+@st.dialog("Iniciar sesión")
+def _login_dialog():
+    email = st.text_input("Correo", key="li_email", placeholder="tu@correo.com")
+    st.text_input("Contraseña", key="li_pass", type="password")
+    if st.button("Entrar", type="primary", use_container_width=True):
+        if email and "@" in email:
+            st.session_state.user = {"email": email, "plan": "Premium"}
+            st.rerun()
+        else:
+            st.error("Ingresa un correo válido.")
+    st.caption("¿No tienes cuenta? Usa **Probar gratis** arriba.")
+
+
+# ── Barra superior: marca + auth ──
+_tb_l, _tb_r = st.columns([3, 2])
+with _tb_l:
+    st.markdown(
+        "<div style='font-weight:800;font-family:Plus Jakarta Sans,sans-serif;"
+        "font-size:1.15rem;color:#0b3d2c;padding-top:.3rem'>🏠 AlquilerJusto</div>",
+        unsafe_allow_html=True,
+    )
+with _tb_r:
+    if st.session_state.user is None:
+        _b1, _b2 = st.columns(2)
+        if _b1.button("Iniciar sesión", use_container_width=True, key="tb_login"):
+            _login_dialog()
+        if _b2.button("Probar gratis", type="primary", use_container_width=True, key="tb_signup"):
+            _signup_dialog()
+    else:
+        _u = st.session_state.user
+        _b1, _b2 = st.columns([3, 2])
+        _b1.markdown(
+            f"<div style='text-align:right;padding-top:.35rem;font-size:.86rem'>"
+            f"👤 {_u['email']} · <b>{_u['plan']}</b></div>", unsafe_allow_html=True,
+        )
+        if _b2.button("Cerrar sesión", use_container_width=True, key="tb_logout"):
+            st.session_state.user = None
+            st.rerun()
+
+# ---------------------------------------------------------------------------
 # Header
 # ---------------------------------------------------------------------------
 _model_for_header, _res_for_header = load_model()
@@ -679,7 +756,19 @@ if selected == "Analizar un alquiler":
         "vista_mar": int(am_mar),
     }
 
-    if st.button("🔍 Analizar precio", type="primary", use_container_width=True):
+    if st.session_state.user is None:
+        _rem = max(0, FREE_LIMIT - st.session_state.free_used)
+        st.caption(f"🎁 Tienes **{_rem}** de {FREE_LIMIT} análisis gratis. "
+                   "Crea una cuenta para análisis ilimitados.")
+
+    _do_analyze = st.button("🔍 Analizar precio", type="primary", use_container_width=True)
+    if _do_analyze and _gate_blocked():
+        st.warning("Llegaste al límite de análisis gratis. Crea una cuenta para seguir "
+                   "(Plan Premium: análisis ilimitados + alertas por S/30/mes).")
+        if st.button("✨ Crear cuenta gratis", key="gate_signup_analyze", type="primary"):
+            _signup_dialog()
+    elif _do_analyze:
+        _register_use()
         pred = model.predict(
             area_m2=float(area),
             bedrooms=int(bedrooms),
@@ -857,7 +946,19 @@ elif selected == "Tasar mi propiedad":
         "vista_mar": int(o_mar),
     }
 
-    if st.button("💰 Calcular precio óptimo", type="primary", use_container_width=True):
+    if st.session_state.user is None:
+        _rem = max(0, FREE_LIMIT - st.session_state.free_used)
+        st.caption(f"🎁 Tienes **{_rem}** de {FREE_LIMIT} cálculos gratis. "
+                   "Crea una cuenta para uso ilimitado.")
+
+    _do_price = st.button("💰 Calcular precio óptimo", type="primary", use_container_width=True)
+    if _do_price and _gate_blocked():
+        st.warning("Llegaste al límite gratis. Crea una cuenta para seguir "
+                   "(Plan Pro corredores: tasaciones ilimitadas + leads por S/90/mes).")
+        if st.button("✨ Crear cuenta gratis", key="gate_signup_price", type="primary"):
+            _signup_dialog()
+    elif _do_price:
+        _register_use()
         pred = model.predict(
             area_m2=float(o_area), bedrooms=int(o_beds), bathrooms=int(o_baths),
             district=o_dist, floor=int(o_floor), amenities=o_amenities,
