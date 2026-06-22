@@ -1,113 +1,121 @@
 # Entrevistas de Usuario — AlquilerJusto
 
-**Objetivo**: Validar el problema y la disposición a pagar.
-**Meta mínima**: 5 entrevistas antes del miércoles 24 de junio.
-
-**Las tres preguntas**:
-1. ¿Cuánto tiempo te tomó tu última búsqueda y cuántos departamentos viste?
-2. ¿Cómo decides si un precio es justo?
-3. ¿Pagarías 30 PEN/mes por una herramienta que te diga si un aviso está bien preciado vs el mercado?
+> **Objetivo:** validar (1) que el problema es real y doloroso, y (2) que hay disposición a pagar.
+> **Meta:** mínimo 5 entrevistas reales antes del miércoles 24 de junio.
+> **Regla de oro:** anota **frases literales**, no resúmenes. Una cita textual vale más que diez opiniones parafraseadas.
 
 ---
 
-## Entrevista 1
+## Cómo conseguir a los 5 entrevistados (mezcla recomendada)
 
-**Fecha**: ___________
-**Perfil**: buscador de depto / corredor / propietario
-**Nombre / seudónimo**: ___________
+| Perfil | Cuántos | Dónde encontrarlos |
+|---|---|---|
+| Buscando depto ahora (inquilino) | 2-3 | Grupos de Facebook "Departamentos Lima", "Alquileres Miraflores/Surco"; amigos que se estén mudando |
+| Corredor / agente inmobiliario | 1-2 | Mismos grupos buscando "agente inmobiliario"; Instagram de corredores |
+| Propietario que alquila | 0-1 | Conocidos que renten un depto |
 
-**P1 — Tiempo y volumen de búsqueda:**
-> "..."
-
-**P2 — Cómo decide si el precio es justo:**
-> "..."
-
-**P3 — Disposición a pagar 30 PEN/mes:**
-> "..."
-
-**Observaciones adicionales:**
+> Tus amigos que prueben la app **cuentan como entrevistados reales** si te dan su reacción genuina. No necesitas extraños.
 
 ---
 
-## Entrevista 2
+## Cómo conducir la entrevista (5-7 min, por WhatsApp/llamada/presencial)
 
-**Fecha**: ___________
-**Perfil**: buscador de depto / corredor / propietario
-**Nombre / seudónimo**: ___________
+1. **Contexto (30s):** "Estoy construyendo una herramienta que te dice si un alquiler en Lima está bien preciado. Quiero entender cómo decides hoy. No hay respuestas correctas."
+2. Haz las **3 preguntas core** (abajo). Deja que hablen; no los guíes hacia el "sí".
+3. **Muéstrales el demo en vivo** (https://alquiler-justo.streamlit.app) y captura su reacción.
+4. Cierra con la pregunta de disposición a pagar.
+5. Anota **frases literales** apenas cuelgues.
 
-**P1 — Tiempo y volumen de búsqueda:**
-> "..."
-
-**P2 — Cómo decide si el precio es justo:**
-> "..."
-
-**P3 — Disposición a pagar 30 PEN/mes:**
-> "..."
-
-**Observaciones adicionales:**
+**Tip:** si todos dicen que aman la idea, sospecha. Las mejores entrevistas tienen escépticos — eso es señal honesta y más creíble en el pitch.
 
 ---
 
-## Entrevista 3
+## Las preguntas
 
-**Fecha**: ___________
-**Perfil**: buscador de depto / corredor / propietario
-**Nombre / seudónimo**: ___________
+**Core (a todos):**
+1. ¿Cuánto tiempo te tomó tu última búsqueda de depto y cuántos viste antes de decidir?
+2. ¿Cómo decides hoy si un precio es justo? (¿comparas?, ¿preguntas?, ¿instinto?)
+3. Después de ver el demo: ¿esto te serviría? ¿pagarías **S/30/mes** por análisis ilimitados + alertas?
 
-**P1 — Tiempo y volumen de búsqueda:**
-> "..."
-
-**P2 — Cómo decide si el precio es justo:**
-> "..."
-
-**P3 — Disposición a pagar 30 PEN/mes:**
-> "..."
-
-**Observaciones adicionales:**
+**Seguimiento (si da contexto):**
+- (Inquilino) ¿Alguna vez sentiste que pagaste de más? ¿Cómo te diste cuenta?
+- (Corredor) ¿Cómo decides el precio al que publicas una propiedad? ¿Pagarías por una herramienta que lo haga en segundos (Plan Pro S/90/mes)?
+- ¿Qué le falta a la app para que la uses de verdad?
 
 ---
 
-## Entrevista 4
+## Registro de entrevistas
 
-**Fecha**: ___________
-**Perfil**: buscador de depto / corredor / propietario
-**Nombre / seudónimo**: ___________
+### Entrevista 1
+- **Fecha:** ___ · **Perfil:** inquilino / corredor / propietario · **Nombre o seudónimo:** ___
+- **P1 (tiempo/volumen de búsqueda):**
+  > "..."
+- **P2 (cómo decide si el precio es justo):**
+  > "..."
+- **Reacción al demo:**
+  > "..."
+- **P3 (¿pagaría S/30?):**  Sí / No / Quizá —
+  > "..."
+- **Qué le falta / objeciones:**
+  > "..."
 
-**P1 — Tiempo y volumen de búsqueda:**
-> "..."
+### Entrevista 2
+- **Fecha:** ___ · **Perfil:** ___ · **Nombre o seudónimo:** ___
+- **P1:**
+  > "..."
+- **P2:**
+  > "..."
+- **Reacción al demo:**
+  > "..."
+- **P3 (¿pagaría?):**  Sí / No / Quizá —
+  > "..."
+- **Qué le falta:**
+  > "..."
 
-**P2 — Cómo decide si el precio es justo:**
-> "..."
+### Entrevista 3
+- **Fecha:** ___ · **Perfil:** ___ · **Nombre o seudónimo:** ___
+- **P1:**
+  > "..."
+- **P2:**
+  > "..."
+- **Reacción al demo:**
+  > "..."
+- **P3 (¿pagaría?):**  Sí / No / Quizá —
+  > "..."
+- **Qué le falta:**
+  > "..."
 
-**P3 — Disposición a pagar 30 PEN/mes:**
-> "..."
+### Entrevista 4
+- **Fecha:** ___ · **Perfil:** ___ · **Nombre o seudónimo:** ___
+- **P1:**
+  > "..."
+- **P2:**
+  > "..."
+- **Reacción al demo:**
+  > "..."
+- **P3 (¿pagaría?):**  Sí / No / Quizá —
+  > "..."
+- **Qué le falta:**
+  > "..."
 
-**Observaciones adicionales:**
+### Entrevista 5
+- **Fecha:** ___ · **Perfil:** ___ · **Nombre o seudónimo:** ___
+- **P1:**
+  > "..."
+- **P2:**
+  > "..."
+- **Reacción al demo:**
+  > "..."
+- **P3 (¿pagaría?):**  Sí / No / Quizá —
+  > "..."
+- **Qué le falta:**
+  > "..."
 
 ---
 
-## Entrevista 5
+## Síntesis (llenar después de las 5)
 
-**Fecha**: ___________
-**Perfil**: buscador de depto / corredor / propietario
-**Nombre / seudónimo**: ___________
-
-**P1 — Tiempo y volumen de búsqueda:**
-> "..."
-
-**P2 — Cómo decide si el precio es justo:**
-> "..."
-
-**P3 — Disposición a pagar 30 PEN/mes:**
-> "..."
-
-**Observaciones adicionales:**
-
----
-
-## Síntesis
-
-| # | Perfil | Tiempo búsqueda | ¿Pagaría? | Quote clave |
+| # | Perfil | Tiempo búsqueda | ¿Pagaría? | Cita clave |
 |---|---|---|---|---|
 | 1 | | | | |
 | 2 | | | | |
@@ -115,6 +123,8 @@
 | 4 | | | | |
 | 5 | | | | |
 
-**Hallazgo principal**: *(completar después de las 5 entrevistas)*
+**Hallazgo principal:** *(1-2 líneas: el patrón que más se repitió)*
 
-**Quote para el pitch**: *(la frase más impactante, para abrir o cerrar la presentación)*
+**Cita para abrir/cerrar el pitch:** *(la frase más impactante, textual)*
+
+**Objeción más común y cómo la respondemos:** *(ej. "asking ≠ transacción" → lo posicionamos como "precio justo de mercado abierto")*
