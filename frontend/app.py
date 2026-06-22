@@ -8,6 +8,7 @@ Tabs:
 """
 
 import json
+import os
 import sys
 from pathlib import Path
 
@@ -19,6 +20,14 @@ from streamlit_folium import st_folium
 from streamlit_option_menu import option_menu
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+# Puente seguro: expone el secret de Streamlit como variable de entorno
+# (lo usan ai/parse_listing.py y ai/assistant.py vía os.getenv).
+try:
+    if "ANTHROPIC_API_KEY" in st.secrets and not os.getenv("ANTHROPIC_API_KEY"):
+        os.environ["ANTHROPIC_API_KEY"] = st.secrets["ANTHROPIC_API_KEY"]
+except Exception:
+    pass  # sin secrets.toml local no pasa nada; se usa .env o el fallback
 
 from backend.app.comparables import get_comparables
 from backend.app.model import get_model
