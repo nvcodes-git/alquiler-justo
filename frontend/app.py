@@ -334,20 +334,23 @@ def load_examples() -> list[dict]:
 def district_stats() -> pd.DataFrame:
     import sqlite3
     conn = sqlite3.connect(DB_PATH)
+    # Filtra precios de venta/oficinas (300–30,000) y usa MEDIANA, robusta a outliers
     df = pd.read_sql_query("""
-        SELECT district,
-               COUNT(*)            AS n,
-               AVG(price_pen)      AS avg_pen,
-               AVG(area_m2)        AS avg_m2,
-               AVG(CAST(bedrooms AS REAL)) AS avg_beds
+        SELECT district, price_pen, area_m2, bedrooms
         FROM listings
-        WHERE price_pen IS NOT NULL AND area_m2 IS NOT NULL
-        GROUP BY district
+        WHERE price_pen IS NOT NULL AND price_pen BETWEEN 300 AND 30000
+          AND area_m2 IS NOT NULL
     """, conn)
     conn.close()
+    g = df.groupby("district").agg(
+        n=("price_pen", "size"),
+        avg_pen=("price_pen", "median"),
+        avg_m2=("area_m2", "median"),
+        avg_beds=("bedrooms", "mean"),
+    ).reset_index()
     for col in ["avg_pen", "avg_m2", "avg_beds"]:
-        df[col] = df[col].round(0)
-    return df
+        g[col] = g[col].round(0)
+    return g
 
 
 # ---------------------------------------------------------------------------
@@ -1103,7 +1106,8 @@ elif selected == "Buscar departamento":
 # Mapa de precios
 # ===========================================================================
 elif selected == "Mapa de precios":
-    st.subheader("Precio promedio por distrito (S/mes)")
+    st.subheader("Precio típico por distrito (S/mes)")
+    st.caption("Mediana del alquiler por distrito (robusta a avisos atípicos).")
 
     stats = district_stats()
 
@@ -1122,8 +1126,8 @@ elif selected == "Mapa de precios":
             color=color, fill=True, fill_color=color, fill_opacity=0.7,
             popup=folium.Popup(
                 f"<b>{meta['label']}</b><br>"
-                f"Precio promedio: <b>S/ {row['avg_pen']:,.0f}</b><br>"
-                f"Área promedio: {row['avg_m2']:.0f} m²<br>"
+                f"Precio típico: <b>S/ {row['avg_pen']:,.0f}</b><br>"
+                f"Área típica: {row['avg_m2']:.0f} m²<br>"
                 f"Avisos: {int(row['n'])}",
                 max_width=200,
             ),
@@ -1150,10 +1154,10 @@ elif selected == "Mapa de precios":
         lambda d: DISTRICT_META.get(d, {}).get("label", d)
     )
     stats_display = stats_display.rename(columns={
-        "n": "Avisos", "avg_pen": "Precio prom. (S/)",
-        "avg_m2": "Área prom. (m²)", "avg_beds": "Dorm. prom.",
+        "n": "Avisos", "avg_pen": "Precio típico (S/)",
+        "avg_m2": "Área típica (m²)", "avg_beds": "Dorm. prom.",
     })
     st.dataframe(
-        stats_display[["Distrito", "Avisos", "Precio prom. (S/)", "Área prom. (m²)", "Dorm. prom."]],
+        stats_display[["Distrito", "Avisos", "Precio típico (S/)", "Área típica (m²)", "Dorm. prom."]],
         use_container_width=True, hide_index=True,
     )
