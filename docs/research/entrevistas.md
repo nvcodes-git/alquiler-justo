@@ -32,15 +32,35 @@
 
 ## Las preguntas
 
-**Core (a todos):**
-1. ¿Cuánto tiempo te tomó tu última búsqueda de depto y cuántos viste antes de decidir?
-2. ¿Cómo decides hoy si un precio es justo? (¿comparas?, ¿preguntas?, ¿instinto?)
-3. Después de ver el demo: ¿esto te serviría? ¿pagarías **S/30/mes** por análisis ilimitados + alertas?
+Usa la guía según el perfil del entrevistado.
 
-**Seguimiento (si da contexto):**
+### Versión A — busca o tasa AHORA (inquilino activo · corredor · propietario)
+
+> Ej.: alguien mudándose este mes, un corredor, o un propietario que pone su depto en alquiler (como mi mamá).
+
+**Core:**
+1. ¿Cuánto tiempo te tomó tu última búsqueda/tasación de depto y cuántos viste antes de decidir?
+2. ¿Cómo decides hoy si un precio es justo? (¿comparas?, ¿preguntas?, ¿instinto?)
+3. Después de ver el demo: ¿esto te serviría? ¿pagarías **S/20/mes** por análisis ilimitados + alertas?
+
+**Seguimiento:**
 - (Inquilino) ¿Alguna vez sentiste que pagaste de más? ¿Cómo te diste cuenta?
-- (Corredor) ¿Cómo decides el precio al que publicas una propiedad? ¿Pagarías por una herramienta que lo haga en segundos (Plan Pro S/90/mes)?
+- (Propietario/Corredor) ¿Cómo decides a qué precio publicar? ¿Confiarías en una recomendación automática?
 - ¿Qué le falta a la app para que la uses de verdad?
+
+### Versión B — estudiante próximo a graduarse (inquilino POTENCIAL)
+
+> Ej.: compañeros por egresar que probablemente alquilen pronto (solos o compartido). Aún no buscan, así que medimos intención y miedos.
+
+**Core:**
+1. ¿Planeas mudarte o alquilar un depto en el próximo año? ¿Solo o compartido? ¿En qué zonas?
+2. Cuando te toque, ¿cómo sabrías si el precio que te piden es justo? (¿le preguntarías a alguien?, ¿compararías?, ¿ni idea?)
+3. Después de ver el demo: ¿esto te daría más seguridad al alquilar por primera vez? ¿pagarías **S/20/mes** mientras estás buscando?
+
+**Seguimiento:**
+- ¿Cuál es tu presupuesto mental de alquiler al mes?
+- ¿Qué es lo que más te preocupa de alquilar por primera vez? (pagar de más, que te estafen, contrato, ubicación…)
+- ¿Usarías algo así o le preguntarías a tus papás/amigos?
 
 ---
 
@@ -54,7 +74,7 @@
   > "..."
 - **Reacción al demo:**
   > "..."
-- **P3 (¿pagaría S/30?):**  Sí / No / Quizá —
+- **P3 (¿pagaría S/20?):**  Sí / No / Quizá —
   > "..."
 - **Qué le falta / objeciones:**
   > "..."
