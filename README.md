@@ -22,6 +22,17 @@ AlquilerJusto scrapea avisos de Infocasas.pe, los normaliza automáticamente (m�
 ## Demo
 
 **URL**: https://alquiler-justo.streamlit.app
+**Video (2-3 min)**: *(próximamente — link de Loom/YouTube)*
+
+### Capturas
+
+| Inicio | Veredicto | Tasar propiedad |
+|---|---|---|
+| ![Inicio](docs/screenshots/01-inicio.png) | ![Veredicto](docs/screenshots/02-veredicto.png) | ![Tasar](docs/screenshots/04-tasar.png) |
+
+| ¿Por qué este precio? | Mapa de precios |
+|---|---|
+| ![Desglose](docs/screenshots/03-desglose.png) | ![Mapa](docs/screenshots/05-mapa.png) |
 
 ## Arquitectura
 
