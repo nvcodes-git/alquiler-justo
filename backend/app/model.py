@@ -283,10 +283,13 @@ class OLSModel:
         else:
             deviation_pct = 0.0
 
-        if deviation_pct < -10 or percentile < 25:
-            verdict, emoji = "buen_precio", "🟢"
-        elif deviation_pct > 10 or percentile > 75:
+        # El veredicto sigue al desvío vs precio justo del modelo (lo que muestra
+        # el gauge), para que ambos sean siempre coherentes. El percentil es
+        # contexto de apoyo, no decide el veredicto.
+        if deviation_pct > 10:
             verdict, emoji = "sobrevalorado", "🔴"
+        elif deviation_pct < -10:
+            verdict, emoji = "buen_precio", "🟢"
         else:
             verdict, emoji = "justo", "🟡"
 
