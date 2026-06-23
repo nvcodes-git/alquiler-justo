@@ -426,13 +426,17 @@ def _signup_dialog():
     st.caption("Empieza gratis. Sin tarjeta.")
     email = st.text_input("Correo", key="su_email", placeholder="tu@correo.com")
     st.text_input("Contraseña", key="su_pass", type="password")
-    plan = st.radio("Plan", ["Gratis", "Pro (S/20/mes)"], key="su_plan", horizontal=True)
+    plan = st.radio("Plan", ["Gratis", "Pago por uso (S/5 / análisis)", "Pro (S/20/mes)"],
+                    key="su_plan")
     if st.button("Crear cuenta", type="primary", use_container_width=True):
         if email and "@" in email:
-            st.session_state.user = {
-                "email": email,
-                "plan": "Pro" if plan.startswith("Pro") else "Gratis",
-            }
+            if plan.startswith("Pro"):
+                _plan = "Pro"
+            elif plan.startswith("Pago"):
+                _plan = "Pago por uso"
+            else:
+                _plan = "Gratis"
+            st.session_state.user = {"email": email, "plan": _plan}
             st.rerun()
         else:
             st.error("Ingresa un correo válido.")
@@ -712,8 +716,8 @@ if selected == "Analizar un alquiler":
 
     _do_analyze = st.button("🔍 Analizar precio", type="primary", use_container_width=True)
     if _do_analyze and _gate_blocked():
-        st.warning("Llegaste al límite de análisis gratis. Crea una cuenta para seguir "
-                   "(Plan Pro: análisis ilimitados + alertas por S/20/mes).")
+        st.warning("Llegaste al límite de análisis gratis. Para seguir: "
+                   "**S/5 por análisis**, o **Pro S/20/mes** (ilimitado + alertas).")
         if st.button("✨ Crear cuenta gratis", key="gate_signup_analyze", type="primary"):
             _signup_dialog()
     elif _do_analyze:
@@ -902,8 +906,8 @@ elif selected == "Tasar mi propiedad":
 
     _do_price = st.button("💰 Calcular precio óptimo", type="primary", use_container_width=True)
     if _do_price and _gate_blocked():
-        st.warning("Llegaste al límite gratis. Crea una cuenta para seguir "
-                   "(Plan Pro: tasaciones ilimitadas + alertas por S/20/mes).")
+        st.warning("Llegaste al límite gratis. Para seguir: "
+                   "**S/5 por tasación**, o **Pro S/20/mes** (ilimitado + alertas).")
         if st.button("✨ Crear cuenta gratis", key="gate_signup_price", type="primary"):
             _signup_dialog()
     elif _do_price:
