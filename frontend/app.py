@@ -22,7 +22,7 @@ from streamlit_option_menu import option_menu
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 # Puente seguro: expone el secret de Streamlit como variable de entorno
-# (lo usan ai/parse_listing.py y ai/assistant.py vía os.getenv).
+# (lo usa ai/assistant.py para el parseo opcional con Claude, vía os.getenv).
 try:
     if "ANTHROPIC_API_KEY" in st.secrets and not os.getenv("ANTHROPIC_API_KEY"):
         os.environ["ANTHROPIC_API_KEY"] = st.secrets["ANTHROPIC_API_KEY"]
@@ -594,11 +594,10 @@ else:
 if selected == "Analizar un alquiler":
     model, results = load_model()
 
-    # --- Intro: explica las formas de ingresar los datos ---
-    st.markdown("### ¿Algún departamento en mente? Coloca sus datos y te ayudo a analizar el precio")
+    # --- Intro ---
+    st.markdown("### ¿Algún departamento en mente? Coloca sus datos y te digo si el precio es justo")
     st.markdown(
-        "Tienes **dos formas** de hacerlo: llena el formulario tú mismo, o si no "
-        "recuerdas todos los datos, **pega la descripción del aviso** y los completamos por ti. "
+        "Llena los datos del departamento en el formulario y te decimos si está bien preciado. "
         "¿No tienes uno a la mano? Prueba con un ejemplo real del mercado 👇"
     )
 
@@ -633,77 +632,18 @@ if selected == "Analizar un alquiler":
                     st.session_state.example_idx = i
                     st.rerun()
 
-    # Show which example is loaded
-    if "claude_parsed" not in st.session_state:
-        st.session_state.claude_parsed = None
-
+    # Ejemplo cargado (si el usuario eligió uno)
     parsed_listing = (
         examples[st.session_state.example_idx]
         if st.session_state.example_idx is not None else None
     )
-    # Claude-parsed listing overrides example
-    if st.session_state.claude_parsed:
-        parsed_listing = st.session_state.claude_parsed
-
     if parsed_listing:
-        source = "autocompletado" if st.session_state.claude_parsed else "base de datos"
-        st.success(
-            f"✅ Datos cargados ({source}) — "
-            "puedes modificar cualquier campo abajo antes de analizar."
-        )
+        st.success("✅ Ejemplo cargado — ajusta cualquier campo abajo antes de analizar.")
 
     st.markdown("---")
-
-    # --- Atajo: pegar la descripción y autocompletar ---
-    st.markdown("##### ¿No recuerdas todos los datos? Pega la descripción del aviso 👇")
-    with st.expander("📋 Pegar descripción y autocompletar el formulario"):
-        st.caption(
-            "Pega el texto del aviso (descripción, título, características) "
-            "y rellenamos m², dormitorios, precio, amenidades y más por ti."
-        )
-        desc_input = st.text_area(
-            "Descripción del aviso",
-            placeholder="Ej: Depto 2 dorm, 75m2, piso 4, Miraflores. Cochera incluida, ascensor. S/ 2,800/mes.",
-            height=120,
-            key="claude_desc_input",
-        )
-        if st.button("Autocompletar formulario", key="parse_claude"):
-            if desc_input.strip():
-                try:
-                    import os
-                    from ai.parse_listing import parse_listing_text, claude_to_model_features
-                    api_key = os.getenv("ANTHROPIC_API_KEY")
-                    if not api_key:
-                        st.error("ANTHROPIC_API_KEY no configurado. Configúralo en los secrets de Streamlit.")
-                    else:
-                        with st.spinner("Analizando el aviso…"):
-                            raw = parse_listing_text(desc_input.strip())
-                        if raw:
-                            features = claude_to_model_features(raw)
-                            am = features.get("amenities", {})
-                            st.session_state.claude_parsed = {
-                                "price_pen":    features.get("price_pen") or 2500,
-                                "area_m2":      features.get("area_m2") or 70,
-                                "bedrooms":     features.get("bedrooms") or 2,
-                                "bathrooms":    features.get("bathrooms") or 1,
-                                "floor":        features.get("floor") or 1,
-                                "district":     features.get("district") or "miraflores",
-                                "amenities_raw": json.dumps({k: int(v) for k, v in am.items()}),
-                                "title":        "Aviso autocompletado",
-                            }
-                            st.session_state.example_idx = None
-                            st.rerun()
-                        else:
-                            st.warning("No se pudo extraer información suficiente. Intenta con una descripción más detallada.")
-                except ImportError:
-                    st.error("Módulo ai.parse_listing no disponible.")
-            else:
-                st.warning("Pega una descripción primero.")
-
-    st.markdown("---")
-    st.markdown("#### ✏️ Completa los datos del aviso")
-    st.caption("Se autocompletan si elegiste un ejemplo o pegaste una descripción arriba. "
-               "Ajusta lo que necesites y dale a *Analizar precio*.")
+    st.markdown("#### ✏️ Completa los datos del departamento")
+    st.caption("Llena los datos de tu depto (o ajusta el ejemplo cargado) "
+               "y dale a *Analizar precio*.")
 
     amenities_raw = json.loads(parsed_listing.get("amenities_raw") or "{}") if parsed_listing else {}
 

@@ -46,7 +46,7 @@ Infocasas.pe ──scraping──► SQLite (1,475 avisos)
 | Web scraping (requests + BeautifulSoup) | 2-3 | `scraping/infocasas.py` |
 | GeoPandas + Folium + Streamlit | 3-7 | `frontend/app.py` |
 | Regresión hedónica (statsmodels OLS) | 8-10 | `backend/app/model.py` |
-| Claude API (extracción estructurada + asistente RAG) | 14 | `ai/parse_listing.py`, `ai/assistant.py` |
+| Claude API (parseo de búsqueda en lenguaje natural, con fallback) | 14 | `ai/assistant.py` |
 
 ## Resultados del modelo
 
