@@ -403,7 +403,7 @@ def build_histogram(comp_prices, listed_price, fair_price) -> go.Figure:
 # ---------------------------------------------------------------------------
 # Cuentas y freemium (demo: estado en sesión, sin persistencia real)
 # ---------------------------------------------------------------------------
-FREE_LIMIT = 3  # análisis gratis para usuarios anónimos
+FREE_LIMIT = 2  # análisis gratis para usuarios anónimos
 
 for _k, _v in {"user": None, "free_used": 0}.items():
     if _k not in st.session_state:
@@ -426,12 +426,12 @@ def _signup_dialog():
     st.caption("Empieza gratis. Sin tarjeta.")
     email = st.text_input("Correo", key="su_email", placeholder="tu@correo.com")
     st.text_input("Contraseña", key="su_pass", type="password")
-    plan = st.radio("Plan", ["Gratis", "Premium (S/30/mes)"], key="su_plan", horizontal=True)
+    plan = st.radio("Plan", ["Gratis", "Pro (S/20/mes)"], key="su_plan", horizontal=True)
     if st.button("Crear cuenta", type="primary", use_container_width=True):
         if email and "@" in email:
             st.session_state.user = {
                 "email": email,
-                "plan": "Premium" if plan.startswith("Premium") else "Gratis",
+                "plan": "Pro" if plan.startswith("Pro") else "Gratis",
             }
             st.rerun()
         else:
@@ -444,7 +444,7 @@ def _login_dialog():
     st.text_input("Contraseña", key="li_pass", type="password")
     if st.button("Entrar", type="primary", use_container_width=True):
         if email and "@" in email:
-            st.session_state.user = {"email": email, "plan": "Premium"}
+            st.session_state.user = {"email": email, "plan": "Pro"}
             st.rerun()
         else:
             st.error("Ingresa un correo válido.")
@@ -713,7 +713,7 @@ if selected == "Analizar un alquiler":
     _do_analyze = st.button("🔍 Analizar precio", type="primary", use_container_width=True)
     if _do_analyze and _gate_blocked():
         st.warning("Llegaste al límite de análisis gratis. Crea una cuenta para seguir "
-                   "(Plan Premium: análisis ilimitados + alertas por S/30/mes).")
+                   "(Plan Pro: análisis ilimitados + alertas por S/20/mes).")
         if st.button("✨ Crear cuenta gratis", key="gate_signup_analyze", type="primary"):
             _signup_dialog()
     elif _do_analyze:
@@ -903,7 +903,7 @@ elif selected == "Tasar mi propiedad":
     _do_price = st.button("💰 Calcular precio óptimo", type="primary", use_container_width=True)
     if _do_price and _gate_blocked():
         st.warning("Llegaste al límite gratis. Crea una cuenta para seguir "
-                   "(Plan Pro corredores: tasaciones ilimitadas + leads por S/90/mes).")
+                   "(Plan Pro: tasaciones ilimitadas + alertas por S/20/mes).")
         if st.button("✨ Crear cuenta gratis", key="gate_signup_price", type="primary"):
             _signup_dialog()
     elif _do_price:

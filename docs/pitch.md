@@ -86,7 +86,7 @@ ln(precio) = β₀ + β₁·ln(m²) + β₂·dorms + β₃·baños
 - ~300,000 búsquedas/mes en portales (SimilarWeb Urbania)
 - Target: buscadores en rotación alta (Miraflores, San Isidro, Surco, Magdalena, Barranco, San Miguel)
 
-**SOM (12 meses)**: 5,000 usuarios Premium a S/30/mes = **S/150,000 MRR**
+**SOM (12 meses)**: 5,000 usuarios Pro a S/20/mes = **S/100,000 MRR**
 - Requiere 0.5% de captación del SAM de Lima
 
 ---
@@ -134,12 +134,12 @@ Infocasas.pe ──scraping──► SQLite (1,475 avisos)
 
 | Tier | Precio | Qué incluye |
 |---|---|---|
-| **Free** | S/0 | Mapa de precios + 3 verdicts/mes |
-| **Premium** | S/30/mes | Verdicts ilimitados + alertas |
-| **Pro corredores** | S/90/mes | Dashboard + exportar leads |
+| **Free** | S/0 | Mapa de precios + 2 análisis/mes |
+| **Pro** | S/20/mes | Análisis ilimitados + alertas |
+| **Corredores** (próximamente) | B2B | Dashboard + leads |
 
 **Costo marginal por verdict**: ~S/0.04 en tokens Claude Haiku
-→ Margen de contribución Premium: **S/29.96/mes** (99.8%)
+→ Margen de contribución Pro: **~S/19.90/mes** (>99%)
 
 **GTM:**
 - First 10: amigos + entrevistados de este proyecto
@@ -161,7 +161,7 @@ Infocasas.pe ──scraping──► SQLite (1,475 avisos)
 |---|---|
 | Scraping bloqueado por portales | Multi-fuente (Infocasas + Adondevivir + Nexo) |
 | R² bajo en distritos new (< 20 obs) | Mostrar "datos insuficientes" — nunca fabricar |
-| WTP baja (no pagan S/30) | Freemium como funnel; B2B corredores como fallback |
+| WTP baja (no pagan S/20) | Freemium como funnel; B2B corredores como fallback |
 
 **El ask** *(si tuviera 30s con un inversionista)*:
 > "Necesito USD 50K para 6 meses: cubrir infra + datos premium + 1 hire part-time.
