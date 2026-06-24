@@ -205,10 +205,10 @@ SLIDES = [
         <div class="kicker">Competencia & moat</div>
         <h2>Nadie le dice al usuario si el precio es justo</h2>
         <table>
-            <tr><th>Alternativa</th><th>Qué hacen</th><th>Qué NO hacen</th></tr>
-            <tr><td>Urbania / Adondevivir</td><td>Marketplace de avisos</td><td>Veredicto de precio justo</td></tr>
-            <tr><td>Properati Index</td><td>Índice general</td><td>Veredicto aviso por aviso</td></tr>
-            <tr><td>Excel / instinto</td><td>Lo que hace el 90%</td><td>Nada estructurado</td></tr>
+            <tr><th>Alternativa</th><th>Qué hacen</th><th>Su límite</th></tr>
+            <tr><td>Urbania / Adondevivir</td><td>Vitrina de avisos</td><td>No dan veredicto de precio</td></tr>
+            <tr><td>Properati Index</td><td>Índice general</td><td>No es aviso por aviso</td></tr>
+            <tr><td>Agente inmobiliario</td><td>Sugiere el precio (lo que hoy hace la gente)</td><td>Caro: cobra ~1 mes de alquiler</td></tr>
         </table>
         <ul style="margin-top:16px">
             <li><b>Moat:</b> dataset propio que se compone con scraping diario.</li>

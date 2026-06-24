@@ -93,11 +93,11 @@ ln(precio) = β₀ + β₁·ln(m²) + β₂·dorms + β₃·baños
 
 ## Slide 7 — Competencia y moat
 
-| Competidor | Qué hacen | Lo que NO hacen |
+| Competidor | Qué hacen | Su límite |
 |---|---|---|
-| Urbania / Adondevivir | Listing marketplace | Veredicto de precio justo |
-| Properati Index | Índice de precios general | Veredicto aviso-a-aviso |
-| Excel / instinto | Lo que hace el 90% | Nada estructurado |
+| Urbania / Adondevivir | Vitrina de avisos | No dan veredicto de precio |
+| Properati Index | Índice de precios general | No es aviso por aviso |
+| Agente inmobiliario | Sugiere el precio (lo que hoy hace la gente) | Caro: cobra ~1 mes de alquiler |
 
 **Nuestro moat:**
 1. **Dataset propio** (scraping diario → ventaja de datos que crece sola)
