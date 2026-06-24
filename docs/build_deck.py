@@ -60,6 +60,11 @@ th {{ color:{GREEN_700}; font-weight:800; }}
 .cover p.lead {{ color:rgba(255,255,255,.95); font-size:27px; margin-top:18px; }}
 .cover .pill {{ background:rgba(255,255,255,.18); border:1px solid rgba(255,255,255,.35); }}
 .cover .foot {{ color:rgba(255,255,255,.85); }}
+.cover li {{ color:rgba(255,255,255,.94); }}
+.cover li::before {{ color:#9ff5c4; }}
+.cover strong, .cover b {{ color:#ffffff; }}
+.cover .note {{ color:#ffe08a; }}
+.cover .kicker {{ color:#bff3d6; }}
 .skyline {{ position:absolute; bottom:0; left:0; right:0; height:90px; opacity:.5; }}
 .two {{ display:flex; gap:34px; }}
 .col {{ flex:1; background:#fff; border:1px solid rgba(11,61,44,.1); border-radius:16px;
@@ -105,35 +110,33 @@ SLIDES = [
     # 2 — Problema
     f"""<div class="slide"><div class="bar"></div>
         <div class="kicker">El problema</div>
-        <h2>Buscar depto en Lima es una apuesta a ciegas</h2>
+        <h2>Alquilar en Lima es una apuesta a ciegas</h2>
         <ul>
-            <li>La búsqueda toma <b>4 a 8 semanas</b> y se ven decenas de avisos.</li>
-            <li>Hay <b>30,000+ avisos activos</b>, pero ningún portal te dice si <i>ese</i> aviso está bien preciado.</li>
-            <li>Decides con <b>instinto</b>, no con datos — y pagas de más sin saberlo.</li>
+            <li><b>4 a 8 semanas</b> revisando avisos a mano.</li>
+            <li><b>30,000+ avisos</b>, pero nada con qué comparar de forma objetiva.</li>
+            <li>Terminas decidiendo <b>sin saber si pagas de más</b>.</li>
         </ul>
-        <p class="lead" style="margin-top:22px"><b>¿S/2,500 por un 2 dorm de 70 m² en Miraflores
-        es caro, justo o regalado?</b> Nadie te lo responde.</p>
+        <p class="lead" style="margin-top:30px"><b>¿S/2,500 por 70 m² en Miraflores
+        es caro o justo?</b></p>
         {footer(2)}</div>""",
     # 3 — Insight
     f"""<div class="slide"><div class="bar"></div>
         <div class="kicker">El insight</div>
-        <h2>Los portales tienen los datos,<br>pero el incentivo equivocado</h2>
+        <h2>Los portales no quieren decírtelo</h2>
         <ul>
-            <li>Urbania y Adondevivir ganan cuando <b>sigues navegando semanas</b>.</li>
-            <li>Decirte "este aviso está sobrevalorado" <b>acorta tu tiempo en su sitio</b> → menos ads → menos ingresos.</li>
-            <li><b>No pueden construir esto sin canibalizarse</b> (incumbent's dilemma).</li>
-            <li class="note">Nosotros cobramos al que busca y al que publica, no al anunciante.</li>
+            <li>Ganan con tu <b>tiempo navegando</b>.</li>
+            <li>El veredicto <b>mataría su negocio de ads</b>.</li>
+            <li class="note">Un incentivo que el incumbente no puede copiar.</li>
         </ul>
         {footer(3)}</div>""",
     # 4 — Solución + demo
     f"""<div class="slide"><div class="bar"></div>
         <div class="kicker">La solución</div>
-        <h2>Pega los datos → veredicto en 5 segundos</h2>
+        <h2>El precio justo, en 5 segundos</h2>
         <ul>
-            <li><b>Precio justo</b> estimado + rango de confianza</li>
-            <li><b>Percentil</b> vs avisos similares de la zona</li>
-            <li>Veredicto claro: 🟢 buen precio · 🟡 justo · 🔴 sobrevalorado</li>
-            <li>5 <b>comparables reales</b> como evidencia, con link directo</li>
+            <li>Precio justo + veredicto 🟢 🟡 🔴</li>
+            <li>Dónde cae tu aviso vs el mercado</li>
+            <li>Comparables reales con link</li>
         </ul>
         <div class="demo"><div class="t">▶ DEMO EN VIVO</div>
             <div class="u">alquiler-justo.streamlit.app</div></div>
@@ -141,20 +144,19 @@ SLIDES = [
     # 5 — Producto dos lados
     f"""<div class="slide"><div class="bar"></div>
         <div class="kicker">Producto</div>
-        <h2>Un solo motor, dos lados del mercado</h2>
+        <h2>Un motor, dos lados del mercado</h2>
         <div class="two">
             <div class="col"><h3>🔍 Inquilino</h3><ul>
-                <li>"¿Me están cobrando de más?"</li>
+                <li>¿Me cobran de más?</li>
                 <li>Veredicto + comparables</li>
-                <li>Búsqueda conversacional: "2 dorm en Surco hasta S/4,000"</li>
+                <li>Búsqueda conversacional</li>
             </ul></div>
             <div class="col"><h3>💰 Propietario</h3><ul>
-                <li>"¿Cuánto pido por mi depto?"</li>
-                <li>Precio óptimo de mercado</li>
-                <li>3 estrategias: alquila rápido · equilibrado · maximiza</li>
+                <li>¿Cuánto pido?</li>
+                <li>Precio óptimo</li>
+                <li>3 estrategias de publicación</li>
             </ul></div>
         </div>
-        <p class="lead" style="margin-top:20px">Mapa de precios por distrito + asistente, sobre la misma base de datos.</p>
         {footer(5)}</div>""",
     # 6 — Modelo
     f"""<div class="slide"><div class="bar"></div>
@@ -175,14 +177,13 @@ SLIDES = [
     # 7 — Mercado
     f"""<div class="slide"><div class="bar"></div>
         <div class="kicker">Mercado</div>
-        <h2>Un mercado grande y desatendido</h2>
+        <h2>Grande y desatendido</h2>
         <ul>
-            <li><b>TAM</b> — alquiler residencial Perú: ~2.3M hogares alquilan (INEI: 28% de hogares).</li>
-            <li><b>SAM</b> — Lima Metropolitana: ~300k búsquedas/mes en portales.</li>
-            <li><b>SOM (12 meses)</b> — 5,000 usuarios Pro × S/20 = <b>S/100k MRR</b> (0.5% del SAM).</li>
+            <li><b>TAM</b> · 2.3M hogares alquilan en Perú</li>
+            <li><b>SAM</b> · Lima: ~300k búsquedas/mes</li>
+            <li><b>SOM</b> · 5,000 Pro = <b>S/100k MRR</b></li>
         </ul>
-        <p class="lead" style="margin-top:20px">Proptech es categoría VC activa en LatAm (La Haus, Houm).
-        Nuestro wedge: <b>inteligencia de precio justo</b>.</p>
+        <p class="lead" style="margin-top:24px">Proptech: categoría VC activa en LatAm.</p>
         {footer(7)}</div>""",
     # 8 — Negocio
     f"""<div class="slide"><div class="bar"></div>
@@ -216,15 +217,14 @@ SLIDES = [
         {footer(9)}</div>""",
     # 10 — Tracción, roadmap, ask
     f"""<div class="slide cover">
-        <div class="kicker" style="color:#d6ffe9">Tracción · Roadmap · The ask</div>
-        <h1 style="font-size:46px">Producto vivo. Listo para crecer.</h1>
-        <ul style="margin-top:10px">
-            <li><b>Hoy:</b> app desplegada · 1,475 avisos · R²=0.82 · 3 entrevistas que validaron el pago por uso (S/5).</li>
-            <li><b>Roadmap:</b> scraping diario + alertas WhatsApp (3m) → multi-fuente Urbania (6m) → dashboard corredores (12m).</li>
-            <li><b>Riesgos:</b> WTP (freemium como funnel) · asking≠transacción (lo posicionamos) · scraping (multi-fuente).</li>
+        <div class="kicker">Tracción · Roadmap · The ask</div>
+        <h1 style="font-size:48px">Producto vivo.<br>Listo para crecer.</h1>
+        <ul style="margin-top:16px">
+            <li><b>Hoy:</b> app desplegada · R²=0.82 · pago por uso validado en entrevistas.</li>
+            <li><b>Roadmap:</b> scraping diario → multi-fuente → dashboard corredores.</li>
         </ul>
-        <p class="lead" style="margin-top:18px"><b>The ask:</b> USD 50K · 6 meses de runway ·
-        milestone: 500 usuarios pagados + 2 corredoras aliadas.</p>
+        <p class="lead" style="margin-top:20px"><b>The ask:</b> USD 50K · 6 meses ·
+        500 usuarios pagados + 2 corredoras.</p>
         <div class="foot"><span>🔗 alquiler-justo.streamlit.app</span><span>10 / 10</span></div>
     </div>""",
 ]
