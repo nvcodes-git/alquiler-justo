@@ -215,16 +215,16 @@ SLIDES = [
             <li><b>Incentivo alineado</b> que el incumbente no puede copiar sin canibalizar sus ads.</li>
         </ul>
         {footer(9)}</div>""",
-    # 10 — Tracción, roadmap, ask
+    # 10 — Tracción, roadmap, visión
     f"""<div class="slide cover">
-        <div class="kicker">Tracción · Roadmap · The ask</div>
+        <div class="kicker">Tracción · Roadmap</div>
         <h1 style="font-size:48px">Producto vivo.<br>Listo para crecer.</h1>
         <ul style="margin-top:16px">
             <li><b>Hoy:</b> app desplegada · R²=0.82 · pago por uso validado en entrevistas.</li>
             <li><b>Roadmap:</b> scraping diario → multi-fuente → dashboard corredores.</li>
         </ul>
-        <p class="lead" style="margin-top:20px"><b>The ask:</b> USD 50K · 6 meses ·
-        500 usuarios pagados + 2 corredoras.</p>
+        <p class="lead" style="margin-top:20px"><b>La visión:</b> que nadie en Lima
+        vuelva a alquilar sin saber si el precio es justo.</p>
         <div class="foot"><span>🔗 alquiler-justo.streamlit.app</span><span>10 / 10</span></div>
     </div>""",
 ]
